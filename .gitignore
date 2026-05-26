@@ -37,3 +37,5 @@ Thumbs.db
 *.key
 *.p12
 secrets/
+
+PLAN.md
