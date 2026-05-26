@@ -1,0 +1,39 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+terraform.tfplan
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+htmlcov/
+coverage.xml
+.coverage
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+*.p12
+secrets/
