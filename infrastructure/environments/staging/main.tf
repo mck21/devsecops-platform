@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -37,4 +41,23 @@ module "security_groups" {
   project_name = var.project_name
   environment  = var.environment
   vpc_id       = module.vpc.vpc_id
+}
+
+module "eks" {
+  source = "../../modules/eks"
+
+  project_name         = var.project_name
+  environment          = var.environment
+  eks_cluster_role_arn = module.iam.eks_cluster_role_arn
+  eks_nodes_role_arn   = module.iam.eks_nodes_role_arn
+  eks_cluster_sg_id    = module.security_groups.eks_cluster_sg_id
+  eks_nodes_sg_id      = module.security_groups.eks_nodes_sg_id
+  private_subnet_ids   = module.vpc.private_subnet_ids
+  public_subnet_ids    = module.vpc.public_subnet_ids
+
+  # Staging: keep costs low
+  node_instance_type = "t3.medium"
+  node_desired_size  = 2
+  node_min_size      = 1
+  node_max_size      = 4
 }
