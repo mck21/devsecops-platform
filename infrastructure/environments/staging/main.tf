@@ -61,3 +61,11 @@ module "eks" {
   node_min_size      = 1
   node_max_size      = 4
 }
+
+module "ecr" {
+  source = "../../modules/ecr"
+
+  project_name          = var.project_name
+  environment           = var.environment
+  image_retention_count = 10
+}
