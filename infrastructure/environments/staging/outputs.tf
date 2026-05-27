@@ -25,3 +25,15 @@ output "eks_cluster_sg_id" {
 output "eks_nodes_sg_id" {
   value = module.security_groups.eks_nodes_sg_id
 }
+
+output "eks_cluster_name" {
+  value = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  value = module.eks.cluster_endpoint
+}
+
+output "oidc_provider_arn" {
+  value = module.eks.oidc_provider_arn
+}
