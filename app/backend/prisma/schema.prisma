@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Flag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  environments Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  auditLogs   AuditLog[]
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  flagKey       String
+  action        String
+  environment   String
+  previousValue Boolean?
+  newValue      Boolean?
+  performedBy   String   @default("system")
+  timestamp     DateTime @default(now())
+  flag          Flag     @relation(fields: [flagKey], references: [key])
+}

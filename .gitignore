@@ -24,6 +24,17 @@ coverage.xml
 # Docker
 .dockerignore
 
+# NestJS
+node_modules/
+
+# Bun
+bun.lockb
+
+# Build outputs
+dist/
+build/
+out/
+
 # IDE
 .vscode/
 .idea/
