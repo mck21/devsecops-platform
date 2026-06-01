@@ -2,8 +2,10 @@ locals {
   name = "${var.project_name}-${var.environment}"
 }
 
-resource "aws_ecr_repository" "app" {
-  name                 = "${local.name}-app"
+resource "aws_ecr_repository" "repos" {
+  for_each = toset(var.repositories)
+
+  name                 = "${local.name}-${each.key}"
   image_tag_mutability = "MUTABLE"
 
   # Scan every image on push for vulnerabilities
@@ -17,15 +19,16 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Name        = "${local.name}-app"
+    Name        = "${local.name}-${each.key}"
     Project     = var.project_name
     Environment = var.environment
   }
 }
 
-# Lifecycle policy — keep only the last N images to control storage costs
-resource "aws_ecr_lifecycle_policy" "app" {
-  repository = aws_ecr_repository.app.name
+# Lifecycle policy for each repository
+resource "aws_ecr_lifecycle_policy" "repos" {
+  for_each   = aws_ecr_repository.repos
+  repository = each.value.name
 
   policy = jsonencode({
     rules = [

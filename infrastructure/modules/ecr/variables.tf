@@ -13,3 +13,9 @@ variable "image_retention_count" {
   type        = number
   default     = 10
 }
+
+variable "repositories" {
+  description = "List of repository names to create"
+  type        = list(string)
+  default     = ["backend", "frontend"]
+}

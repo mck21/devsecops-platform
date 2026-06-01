@@ -1,14 +1,9 @@
-output "repository_url" {
-  description = "URL of the ECR repository"
-  value       = aws_ecr_repository.app.repository_url
+output "repository_urls" {
+  description = "Map of repository name to URL"
+  value       = { for k, v in aws_ecr_repository.repos : k => v.repository_url }
 }
 
-output "repository_arn" {
-  description = "ARN of the ECR repository"
-  value       = aws_ecr_repository.app.arn
-}
-
-output "registry_id" {
-  description = "Registry ID (AWS account ID)"
-  value       = aws_ecr_repository.app.registry_id
+output "repository_arns" {
+  description = "Map of repository name to ARN"
+  value       = { for k, v in aws_ecr_repository.repos : k => v.arn }
 }
