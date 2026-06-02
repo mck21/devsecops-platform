@@ -528,3 +528,4 @@ bunx nest g service features
 * Use `process.env.PORT` instead of a hardcoded port.
 * Remove or register the unused `AppController` and `AppService`.
 * Update `test/app.e2e-spec.ts` to match the actual API routes.
+* Add authentication - who made the change? for audit logs
