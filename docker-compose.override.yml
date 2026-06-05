@@ -1,0 +1,11 @@
+services:
+  backend:
+    build:
+      target: deps          # stop at deps stage — no build needed
+    command: >
+      sh -c "bunx prisma migrate deploy && bun --watch src/main.ts"
+    volumes:
+      - ./app/backend:/app      # mount source for hot reload
+      - /app/node_modules   # keep container's node_modules
+    environment:
+      NODE_ENV: development
