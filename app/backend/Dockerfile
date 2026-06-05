@@ -16,14 +16,16 @@ FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
+# Dummy URL for prisma generate at build time (runtime URL comes from K8s secret)
+ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Build NestJS (outputs to dist/)
 RUN bun run build
 
 # ──────────────────────────────────────────
-# Stage 3: runner (production image)
+# Stage 3: runner
 # ──────────────────────────────────────────
 FROM oven/bun:1-slim AS runner
 
@@ -31,13 +33,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Only copy what's needed to run
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY package.json ./
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 3000
 
-# Run migrations then start
-CMD ["sh", "-c", "bunx prisma migrate deploy && bun dist/main.js"]
+CMD ["./docker-entrypoint.sh"]
