@@ -1,21 +1,23 @@
+# Blue/green skeleton — not included in dev overlay by default.
+# Switch traffic via VirtualService in Phase 5 automation.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: backend-blue
   labels:
     app: backend
+    version: blue
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
+      version: blue
   template:
     metadata:
       labels:
         app: backend
-      annotations:
-        proxy.istio.io/config: |
-          holdApplicationUntilProxyStarts: true
+        version: blue
     spec:
       serviceAccountName: backend-sa
       containers:

@@ -1,0 +1,21 @@
+# Istio treats unnamed ports as HTTP; TCP services need explicit TLS disable
+# when using appProtocol: tcp on the Kubernetes Service.
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: postgres
+spec:
+  host: postgres
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: redis
+spec:
+  host: redis
+  trafficPolicy:
+    tls:
+      mode: DISABLE

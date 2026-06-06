@@ -1,0 +1,23 @@
+# Scaffolding — register manually or via Phase 5 CD pipeline.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: feature-flags-dev
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mck21/devsecops-platform.git
+    targetRevision: main
+    path: k8s/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
