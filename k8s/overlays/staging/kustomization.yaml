@@ -1,18 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: dev
+namespace: staging
 
 resources:
   - ../../base
 
 patches:
   - path: patch-deployment.yaml
-  - path: patch-hpa.yaml
   - path: patch-ingress.yaml
-  - path: patch-resourcequota.yaml
 
 images:
   - name: backend
-    newName: backend
+    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/devsecops-staging-backend
     newTag: latest

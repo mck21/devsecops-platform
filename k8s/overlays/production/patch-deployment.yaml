@@ -3,16 +3,17 @@ kind: Deployment
 metadata:
   name: backend
 spec:
-  replicas: 1
+  replicas: 3
   template:
     spec:
       containers:
         - name: backend
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
               cpu: 200m
               memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      # securityContext hardening applied in Phase 6

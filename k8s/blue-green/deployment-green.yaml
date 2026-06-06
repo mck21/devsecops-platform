@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: backend-green
   labels:
     app: backend
+    version: green
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
+      version: green
   template:
     metadata:
       labels:
         app: backend
-      annotations:
-        proxy.istio.io/config: |
-          holdApplicationUntilProxyStarts: true
+        version: green
     spec:
       serviceAccountName: backend-sa
       containers:

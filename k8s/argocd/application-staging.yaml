@@ -1,0 +1,23 @@
+# Scaffolding — requires EKS cluster and ArgoCD on EKS (Phase 2 EKS + Phase 5).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: feature-flags-staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mck21/devsecops-platform.git
+    targetRevision: main
+    path: k8s/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
-  namespace: dev
+  labels:
+    app: redis
 spec:
   replicas: 1
   selector:
@@ -18,13 +19,22 @@ spec:
           image: redis:7-alpine
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 6379
+            - name: tcp-redis
+              containerPort: 6379
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  namespace: dev
+  labels:
+    app: redis
 spec:
   selector:
     app: redis
