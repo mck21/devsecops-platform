@@ -1,5 +1,7 @@
 # Backend — Feature Flag Service
 
+> **Agent note:** Phase 3 complete. All API endpoints, audit logging (create/toggle/delete), health checks (PostgreSQL + Redis), and Prometheus metrics are implemented. For project context and gotchas, see [AGENTS.md](../../AGENTS.md) and [STATUS.md](../../STATUS.md).
+
 REST API built with NestJS to manage **feature flags** (environment-specific feature toggles). Data is persisted in **PostgreSQL** (via Prisma), read operations are cached in **Redis**, and an **audit endpoint** is available to inspect changes.
 
 This document is intended for developers who are new to NestJS. It explains the project structure, framework concepts, and the end-to-end lifecycle of an HTTP request.
