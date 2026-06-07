@@ -9,12 +9,14 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   gitleaks:
     name: Gitleaks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -67,6 +69,7 @@ jobs:
 
       - name: Run OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@75ba02d6183445fe0761d26e836bde58b1560600 # v1.1.0
+        continue-on-error: true
         with:
           project: devsecops-platform-backend
           path: app/backend

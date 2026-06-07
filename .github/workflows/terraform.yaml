@@ -60,7 +60,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform plan
-        run: terraform plan -no-color -input=false -out=tfplan
+        run: terraform plan -no-color -input=false -lock=false -refresh=false -out=tfplan
 
       - name: Save plan output
         run: terraform show -no-color tfplan > plan.txt
