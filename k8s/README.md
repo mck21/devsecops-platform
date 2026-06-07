@@ -23,7 +23,7 @@ k8s/
 | Path | Status | Notes |
 |------|--------|-------|
 | `overlays/dev/` | **Live** — deploy on Minikube today | Full stack: backend, postgres, redis, HPA |
-| `overlays/staging/` | Scaffolding | ECR image placeholder; live deploy in Phase 5 |
+| `overlays/staging/` | Scaffolding | ECR image refs aligned; live deploy in Phase 5 |
 | `overlays/production/` | Scaffolding | Same as staging |
 | `blue-green/` | Scaffolding | Traffic switch automation in Phase 5 |
 | `argocd/` | Scaffolding | Auto-sync wired in Phase 5 |
@@ -56,7 +56,7 @@ Add to `/etc/hosts`: `127.0.0.1 flags.dev.local` and run `minikube tunnel`.
 
 ## Staging / Production
 
-Overlays exist as scaffolding. Replace `<ACCOUNT_ID>` in `kustomization.yaml` with your AWS account ID after Phase 4 ECR push. Live deploy deferred to Phase 5.
+Overlays point at ECR (`125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-{staging,production}-backend`). CI (Phase 4) pushes `sha-<commit>` tags on every PR (staging) and on `main` (staging + production). Live deploy to EKS deferred to Phase 5.
 
 ## Troubleshooting
 

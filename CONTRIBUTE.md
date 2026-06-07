@@ -65,6 +65,19 @@ git push
 - Add a short description of what changed and why
 - Click **Create pull request**
 
+### 5b. Wait for CI checks (Phase 4+)
+
+Every PR must pass the automated checks before merge:
+
+| Check | Workflow | What it does |
+|-------|----------|--------------|
+| CI | `.github/workflows/ci.yaml` | ESLint, Jest (coverage), Docker build, Trivy, ECR push (staging) |
+| Security | `.github/workflows/security.yaml` | Gitleaks, Checkov, Trivy fs, OWASP Dependency Check |
+| Terraform | `.github/workflows/terraform.yaml` | `terraform fmt`, validate, plan |
+| SonarCloud | GitHub App | Quality gate on `app/backend/src/` |
+
+Fix failing checks on your branch and push again — GitHub re-runs the workflows automatically.
+
 ### 6. Merge the PR
 
 - Review the changes in the **Files changed** tab
@@ -163,6 +176,7 @@ git branch -d feat/vpc-networking-module
 | Istio service mesh | `feat/istio-service-mesh` |
 | NestJS backend | `feat/nestjs-feature-flag-api` |
 | CI pipeline | `feat/github-actions-ci-pipeline` |
+| CD / GitOps pipeline | `feat/argocd-cd-pipeline` |
 | Agent / status docs | `docs/agent-guide` |
 | SonarQube setup | `feat/sonarqube-quality-gate` |
 | Security hardening | `feat/kubernetes-security-hardening` |
