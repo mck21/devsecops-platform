@@ -41,3 +41,11 @@ output "oidc_provider_arn" {
 output "ecr_repository_urls" {
   value = module.ecr.repository_urls
 }
+
+output "cicd_role_arn" {
+  value = module.iam.cicd_role_arn
+}
+
+output "github_oidc_provider_arn" {
+  value = module.github_oidc.arn
+}
