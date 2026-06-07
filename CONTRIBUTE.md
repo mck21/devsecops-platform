@@ -35,7 +35,7 @@ git checkout -b feat/<short-description>
 # Examples:
 git checkout -b feat/terraform-remote-backend
 git checkout -b feat/vpc-networking-module
-git checkout -b feat/fastapi-health-endpoint
+git checkout -b feat/nestjs-health-endpoint
 git checkout -b docs/readme-architecture-diagram
 git checkout -b fix/hpa-memory-threshold
 ```
@@ -161,8 +161,9 @@ git branch -d feat/vpc-networking-module
 | Minikube base setup | `feat/minikube-base-setup` |
 | ArgoCD install | `feat/argocd-installation` |
 | Istio service mesh | `feat/istio-service-mesh` |
-| FastAPI app | `feat/fastapi-application` |
+| NestJS backend | `feat/nestjs-feature-flag-api` |
 | CI pipeline | `feat/github-actions-ci-pipeline` |
+| Agent / status docs | `docs/agent-guide` |
 | SonarQube setup | `feat/sonarqube-quality-gate` |
 | Security hardening | `feat/kubernetes-security-hardening` |
 | Monitoring stack | `feat/prometheus-grafana-loki` |

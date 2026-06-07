@@ -2,6 +2,8 @@
 
 Kustomize-based manifests for the Feature Flag Service.
 
+**Agent docs:** [AGENTS.md](../AGENTS.md) · **Phase status:** [STATUS.md](../STATUS.md) · **Troubleshooting:** [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
+
 ## Structure
 
 ```
@@ -15,6 +17,16 @@ k8s/
 ├── argocd/            # Application CRDs (wired in Phase 5)
 └── namespaces/        # Platform namespaces
 ```
+
+## Phase Scope
+
+| Path | Status | Notes |
+|------|--------|-------|
+| `overlays/dev/` | **Live** — deploy on Minikube today | Full stack: backend, postgres, redis, HPA |
+| `overlays/staging/` | Scaffolding | ECR image placeholder; live deploy in Phase 5 |
+| `overlays/production/` | Scaffolding | Same as staging |
+| `blue-green/` | Scaffolding | Traffic switch automation in Phase 5 |
+| `argocd/` | Scaffolding | Auto-sync wired in Phase 5 |
 
 ## Deploy to Minikube (dev)
 
@@ -48,9 +60,13 @@ Overlays exist as scaffolding. Replace `<ACCOUNT_ID>` in `kustomization.yaml` wi
 
 ## Troubleshooting
 
+Quick reference — full runbook: [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
+
 | Symptom | Fix |
 |---------|-----|
 | `FailedCreate: minimum cpu usage per Container is 50m, but request is 10m` | LimitRange `min` too high for Istio sidecar — see `base/limitrange.yaml` |
 | `exceeded quota: namespace-quota, limits.cpu` | Dev quota too tight during rollouts — see `overlays/dev/patch-resourcequota.yaml` |
-| `P1001: Can't reach database server` | Apply `destinationrules-tcp.yaml`; ensure `holdApplicationUntilProxyStarts` on backend |
+| `P1001: Can't reach database server` | Apply `base/destinationrules-tcp.yaml`; ensure `holdApplicationUntilProxyStarts: true` on backend deployment |
+| Istio treats Postgres/Redis as HTTP | Name service ports with `tcp-` prefix and set `appProtocol: tcp` — see `base/postgres.yaml`, `base/redis.yaml` |
 | Stale image after rebuild | Scale to 0, `minikube ssh "docker rmi -f backend:latest"`, `minikube image load backend:latest` |
+| Prisma config / migrate errors | See [TROUBLESHOOTING.md § Prisma v7](../TROUBLESHOOTING.md#prisma-v7) |
