@@ -28,21 +28,11 @@ module "vpc" {
   private_subnet_cidrs = ["10.0.10.0/24", "10.0.20.0/24"]
 }
 
-# Account-level OIDC provider — created once via staging apply
-module "github_oidc" {
-  source = "../../modules/github-oidc"
-
-  project_name = var.project_name
-}
-
 module "iam" {
   source = "../../modules/iam"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  tfstate_bucket_name = "devsecops-tfstate-125156866917"
-
-  depends_on = [module.github_oidc]
+  project_name = var.project_name
+  environment  = var.environment
 }
 
 module "security_groups" {

@@ -13,9 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "bun dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint:ci": "eslint \"src/**/*.ts\" --max-warnings 0",
     "test": "jest",
-    "test:ci": "jest --coverage --ci",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -88,13 +86,9 @@
       "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "tsconfig.spec.json" }]
     },
     "collectCoverageFrom": [
-      "src/**/*.(t|j)s"
+      "**/*.(t|j)s"
     ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "text",
-      "lcov"
-    ],
+    "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   }
 }

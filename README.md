@@ -31,9 +31,8 @@ The application is a **Feature Flag Service** — manage feature toggles per env
 | 1 | AWS Infrastructure (Terraform) | Done |
 | 2 | Kubernetes base (Minikube + Istio) | Done |
 | 3 | Feature Flag Service + K8s manifests | **Done** |
-| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** |
-| 5 | CD Pipeline & GitOps (ArgoCD) | Next |
-| 6–9 | Security, Monitoring, DR, Docs | Planned |
+| 4 | CI Pipeline (GitHub Actions, SonarCloud) | Next |
+| 5–9 | CD, Security, Monitoring, DR, Docs | Planned |
 
 Full tracker: [STATUS.md](STATUS.md) · Full roadmap: [PLAN.md](PLAN.md)
 
@@ -119,8 +118,8 @@ See [app/backend/README.md](app/backend/README.md) for `.env` and Prisma setup.
 | IaC | Terraform |
 | Containers | Docker |
 | Orchestration | Kubernetes (Minikube dev / EKS staging+prod) |
-| CI | GitHub Actions — lint, test, SonarCloud, Trivy, ECR push (OIDC) |
-| CD / GitOps | ArgoCD (Phase 5) |
+| CI/CD | GitHub Actions (Phase 4) |
+| GitOps | ArgoCD (Phase 5) |
 | Service Mesh | Istio |
 | Code Quality | SonarCloud |
 | Security | Trivy, Checkov, Gitleaks, Cosign (Phases 4–6) |
@@ -131,21 +130,12 @@ See [app/backend/README.md](app/backend/README.md) for `.env` and Prisma setup.
 ## Repository Structure
 
 ```
-app/backend/           NestJS Feature Flag API
-.github/workflows/     CI pipelines (lint, test, security, ECR, Terraform)
-infrastructure/        Terraform modules and environments
-k8s/                   Kustomize manifests (base + overlays)
-images/phase-N/        Screenshot evidence per phase
-docs/                  Full documentation (Phase 9)
+app/backend/       NestJS Feature Flag API
+infrastructure/    Terraform modules and environments
+k8s/               Kustomize manifests (base + overlays)
+images/phase-N/    Screenshot evidence per phase
+docs/              Full documentation (Phase 9)
 ```
-
----
-
-## CI Pipeline (Phase 4)
-
-Every push and PR runs [`.github/workflows/ci.yaml`](.github/workflows/ci.yaml): ESLint → Jest (coverage) → Docker build → Trivy → ECR push via GitHub OIDC. Security scans run in [`security.yaml`](.github/workflows/security.yaml); Terraform validation in [`terraform.yaml`](.github/workflows/terraform.yaml).
-
-SonarCloud quality gate is enforced via the **SonarCloud GitHub App** check on PRs. Evidence: [`images/phase-4/`](images/phase-4/).
 
 ---
 

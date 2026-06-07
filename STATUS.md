@@ -1,8 +1,8 @@
 # Project Status
 
-Phase tracker for the DevSecOps platform. Updated after Phase 4 completion.
+Phase tracker for the DevSecOps platform. Updated after Phase 3 completion.
 
-**Active work:** Phase 5 — CD Pipeline & GitOps  
+**Active work:** Phase 4 — CI Pipeline  
 **Agent entry point:** [AGENTS.md](AGENTS.md)  
 **Deploy runbook:** [TROUBLESHOOTING.md](TROUBLESHOOTING.md)  
 **Full roadmap:** [PLAN.md](PLAN.md)
@@ -17,7 +17,7 @@ Phase tracker for the DevSecOps platform. Updated after Phase 4 completion.
 | 1 | Terraform & AWS (VPC, EKS, ECR, IAM) | Done | `infrastructure/`, `images/phase-1/` |
 | 2 | Kubernetes base (Minikube: Istio, ArgoCD, Ingress) | Done (Minikube) | `k8s/namespaces/`, `images/phase-2/`, install notes in `k8s/argocd/`, `k8s/istio/` |
 | 3 | Feature Flag Service + K8s manifests | **Done** | `app/backend/`, `k8s/`, `images/phase-3/` |
-| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** | `.github/workflows/`, `sonar-project.properties`, `images/phase-4/` |
+| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | Not started | `.github/workflows/` empty |
 | 5 | CD & GitOps (ArgoCD sync, blue/green automation) | Not started | Scaffolding in `k8s/argocd/`, `k8s/blue-green/` |
 | 6 | Security hardening (Kyverno, Cosign, NetworkPolicy) | Not started | — |
 | 7 | Monitoring & SRE (Prometheus, Grafana, Loki) | Not started | `monitoring/` placeholder |
@@ -45,7 +45,7 @@ All criteria met. See [PLAN.md § Phase 3 Completion Criteria](PLAN.md) for the 
 
 ### Kubernetes — scaffolding (not live-deployed)
 
-- `k8s/overlays/staging/` and `k8s/overlays/production/` with ECR image refs (CI-validated)
+- `k8s/overlays/staging/` and `k8s/overlays/production/` with ECR placeholders
 - `k8s/argocd/application-{dev,staging,production}.yaml`
 - `k8s/blue-green/` (deployments + VirtualService + DestinationRule)
 
@@ -65,47 +65,19 @@ Located in `images/phase-3/`:
 
 ---
 
-## Phase 4 — Completion Details
+## Active Work — Phase 4
 
-All criteria met. Pipeline green on PR #16 with OIDC push to ECR staging.
+**Goal:** Every push triggers lint, test, SonarCloud quality gate, security scans, Docker build, and ECR push.
 
-### CI / CD workflows
+**Key deliverables:**
 
-- [`.github/workflows/ci.yaml`](.github/workflows/ci.yaml) — lint → test → Docker build → Trivy → ECR push (OIDC, staging; production on `main`)
-- [`.github/workflows/security.yaml`](.github/workflows/security.yaml) — Gitleaks, Checkov (soft-fail), Trivy fs, OWASP Dependency Check
-- [`.github/workflows/terraform.yaml`](.github/workflows/terraform.yaml) — fmt, validate, plan (staging + production matrix)
-- [`sonar-project.properties`](sonar-project.properties) — org `mck21`, project `mck21_devsecops-platform`
-- SonarCloud quality gate via GitHub App check (Automatic Analysis on free plan)
+- `.github/workflows/ci.yaml` — main pipeline
+- `.github/workflows/security.yaml` — standalone security scans
+- `.github/workflows/terraform.yaml` — terraform validate/plan
+- `sonar-project.properties` — SonarCloud config for TypeScript
+- AWS OIDC auth for ECR push (no long-lived keys)
 
-### Infrastructure & config
-
-- [`infrastructure/modules/github-oidc/`](infrastructure/modules/github-oidc/) — GitHub OIDC provider (apply via staging)
-- IAM `cicd` role: ECR push + S3 state read + `ReadOnlyAccess` for `terraform plan`
-- Backend CI: `lint:ci`, `test:ci`; Jest LCOV → `app/backend/coverage/lcov.info`
-- K8s overlays: ECR image names aligned with Terraform (`mck21-devsecops-*-backend`)
-- GitHub Actions pinned to full commit SHAs; `id-token: write` at job level
-
-### Screenshots
-
-Located in `images/phase-4/`:
-
-| File | Content |
-|------|---------|
-| `01-sonarqube-cloud-passed.png` | SonarCloud Quality Gate passed |
-| `02-build-complete.png` | CI build job complete |
-| `03-action-success.png` | GitHub Actions workflow success |
-| `04-pipeline-checks-passed.png` | PR with all checks green |
-| `05-ecr-sha.png` | ECR image with `sha-<commit>` tag |
-
----
-
-## Active Work — Phase 5
-
-**Goal:** Merge to main automatically deploys to Minikube (dev) and EKS (staging/prod) via ArgoCD.
-
-**Prerequisites from Phase 4:** CI pushes images to ECR; CD updates image tags in `k8s/overlays/`.
-
-See [PLAN.md § Phase 5](PLAN.md) for full requirements.
+**Stack correction:** Application is NestJS/TypeScript/Jest — not Python. See [AGENTS.md § Tech Stack Note](AGENTS.md).
 
 ---
 
@@ -113,7 +85,7 @@ See [PLAN.md § Phase 5](PLAN.md) for full requirements.
 
 | Item | Reason | Target Phase |
 |------|--------|--------------|
-| Live EKS app deploy | CI pushes to ECR; CD wiring pending | 5 |
+| Live EKS app deploy | Requires CI image push + CD wiring | 4 + 5 |
 | ArgoCD auto-sync | CD pipeline not built | 5 |
 | EKS platform components (Ingress, Cert Manager on EKS) | Partially done in Phase 2; full parity deferred | 2 EKS + 5 |
 | `infrastructure/environments/dev/` | Empty by design — dev runs on Minikube | N/A |
@@ -127,5 +99,5 @@ See [PLAN.md § Phase 5](PLAN.md) for full requirements.
 | Environment | Kubernetes | Status |
 |-------------|------------|--------|
 | `dev` | Minikube (local) | App deployed and validated |
-| `staging` | EKS (AWS) | CI validated (ECR push); app deploy in Phase 5 |
-| `production` | EKS (AWS) | CI validated; app deploy in Phase 5 |
+| `staging` | EKS (AWS) | Terraform ready; app not deployed |
+| `production` | EKS (AWS) | Terraform ready; app not deployed |

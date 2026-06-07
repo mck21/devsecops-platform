@@ -31,9 +31,8 @@ module "vpc" {
 module "iam" {
   source = "../../modules/iam"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  tfstate_bucket_name = "devsecops-tfstate-125156866917"
+  project_name = var.project_name
+  environment  = var.environment
 }
 
 module "security_groups" {
