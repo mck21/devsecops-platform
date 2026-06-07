@@ -158,7 +158,7 @@ kubectl scale deployment/backend -n dev --replicas=1
 kubectl rollout status deployment/backend -n dev
 ```
 
-**Prevention:** Use versioned tags (e.g. `backend:sha-abc123`) instead of `latest`. CI (Phase 4) pushes `sha-<commit>` tags to ECR on every green build.
+**Prevention:** Use versioned tags (e.g. `backend:sha-abc123`) instead of `latest`. Phase 4 CI will push `sha-<commit>` tags to ECR.
 
 **Related file:** [`k8s/overlays/dev/patch-deployment.yaml`](k8s/overlays/dev/patch-deployment.yaml) (`imagePullPolicy: Never`).
 

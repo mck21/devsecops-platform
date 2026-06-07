@@ -41,7 +41,3 @@ output "oidc_provider_arn" {
 output "ecr_repository_urls" {
   value = module.ecr.repository_urls
 }
-
-output "cicd_role_arn" {
-  value = module.iam.cicd_role_arn
-}

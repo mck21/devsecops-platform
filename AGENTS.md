@@ -21,7 +21,7 @@ Entry point for AI agents working on this repository. Read this file first, then
 | Dev cluster | Minikube (local) |
 | Staging / Production | EKS on AWS |
 
-**Current phase:** Phase 4 complete. **Next:** Phase 5 — CD Pipeline & GitOps. See [STATUS.md](STATUS.md).
+**Current phase:** Phase 3 complete. **Next:** Phase 4 — CI Pipeline. See [STATUS.md](STATUS.md).
 
 ---
 
@@ -33,7 +33,7 @@ devsecops-platform/
 ├── app/frontend/         # Empty — reserved for future UI
 ├── infrastructure/       # Terraform modules + staging/production envs
 ├── k8s/                  # Kustomize manifests (base + overlays + blue-green + argocd)
-├── .github/workflows/    # ci.yaml, security.yaml, terraform.yaml (Phase 4)
+├── .github/workflows/    # Empty — Phase 4
 ├── docs/                 # Placeholder — full docs in Phase 9
 ├── images/phase-N/       # Screenshot evidence per phase
 ├── docker-compose.yml    # Local dev stack (postgres + redis + backend)
@@ -117,6 +117,7 @@ Summary:
 
 | Deferred to | Do not implement yet |
 |-------------|---------------------|
+| Phase 4 | GitHub Actions CI, ECR push, SonarCloud gate |
 | Phase 5 | ArgoCD auto-sync, CD image-tag updates, blue/green traffic switch scripts |
 | Phase 5 | Live EKS deploy of the application |
 | Phase 6 | Kyverno policies, NetworkPolicy, External Secrets, manifest `securityContext` |
@@ -143,9 +144,6 @@ Summary:
 | Terraform staging/prod | `infrastructure/environments/staging/`, `production/` |
 | Phase roadmap | `PLAN.md` |
 | Phase progress | `STATUS.md` |
-| CI workflows | `.github/workflows/ci.yaml`, `security.yaml`, `terraform.yaml` |
-| SonarCloud config | `sonar-project.properties` |
-| GitHub OIDC (Terraform) | `infrastructure/modules/github-oidc/` |
 
 ---
 
@@ -159,12 +157,12 @@ Summary:
 
 ---
 
-## Tech Stack Note — CI (Phase 4, done)
+## Tech Stack Note for CI (Phase 4)
 
-The application is **NestJS / TypeScript / Jest / Bun**, not Python:
+The application is **NestJS / TypeScript / Jest / Bun**, not Python. When implementing Phase 4 CI:
 
-- Lint: ESLint via `bun run lint:ci` (not ruff)
-- Tests: Jest with coverage via `bun run test:ci` (not pytest)
-- SonarCloud: TypeScript sources under `app/backend/src/`; quality gate via GitHub App check on free plan
+- Lint: ESLint (not ruff)
+- Tests: Jest with coverage (not pytest)
+- SonarCloud: TypeScript sources under `app/backend/src/`
 
-Some older references in [PLAN.md](PLAN.md) may still mention Python — treat NestJS/TypeScript as the source of truth.
+Some older references in PLAN.md Phase 4 may still mention Python — treat NestJS/TypeScript as the source of truth.

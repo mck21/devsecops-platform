@@ -12,5 +12,5 @@ patches:
 
 images:
   - name: backend
-    newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-staging-backend
+    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/devsecops-staging-backend
     newTag: latest
