@@ -56,7 +56,7 @@ Add to `/etc/hosts`: `127.0.0.1 flags.dev.local` and run `minikube tunnel`.
 
 ## Staging / Production
 
-Overlays exist as scaffolding. Replace `<ACCOUNT_ID>` in `kustomization.yaml` with your AWS account ID after Phase 4 ECR push. Live deploy deferred to Phase 5.
+Overlays point at ECR (`125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-{staging,production}-backend`). CI pushes `sha-<commit>` tags in Phase 4; live deploy deferred to Phase 5.
 
 ## Troubleshooting
 

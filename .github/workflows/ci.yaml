@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Install backend dependencies
+        working-directory: app/backend
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        working-directory: app/backend
+        run: bun run lint:ci
+
+      - name: yamllint
+        run: |
+          yamllint -c .yamllint k8s/
+          yamllint -c .yamllint .github/
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive infrastructure/
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('app/backend/bun.lock') }}
+          restore-keys: |
+            bun-
+
+      - name: Install backend dependencies
+        working-directory: app/backend
+        run: bun install --frozen-lockfile
+
+      - name: Jest with coverage
+        working-directory: app/backend
+        run: bun run test:ci
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: app/backend/coverage/
+          retention-days: 7
+
+  sonar:
+    name: SonarCloud
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: app/backend/coverage
+
+      - name: SonarCloud scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build-and-push:
+    name: Build, Scan & Push
+    needs: [lint, test, sonar]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: app/backend
+          push: false
+          load: true
+          tags: backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: backend:ci
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.PROJECT_NAME }}-staging-cicd-role
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - name: Set image tags
+        id: tags
+        run: |
+          REGISTRY="${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com"
+          STAGING="${REGISTRY}/${{ vars.PROJECT_NAME }}-staging-backend"
+          echo "staging=${STAGING}" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=sha-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Push to staging ECR
+        uses: docker/build-push-action@v6
+        with:
+          context: app/backend
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.staging }}:${{ steps.tags.outputs.sha_tag }}
+            ${{ steps.tags.outputs.staging }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Push to production ECR
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: app/backend
+          push: true
+          tags: |
+            ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.PROJECT_NAME }}-production-backend:${{ steps.tags.outputs.sha_tag }}
+            ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.PROJECT_NAME }}-production-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
