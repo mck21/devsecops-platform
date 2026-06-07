@@ -1,6 +1,6 @@
 # Backend — Feature Flag Service
 
-> **Agent note:** Phase 3 complete. All API endpoints, audit logging (create/toggle/delete), health checks (PostgreSQL + Redis), and Prometheus metrics are implemented. For project context and gotchas, see [AGENTS.md](../../AGENTS.md) and [STATUS.md](../../STATUS.md).
+> **Agent note:** Phase 3 complete (API). Phase 4 complete (CI: `lint:ci`, `test:ci`, Docker/ECR). **Next:** Phase 5 CD/GitOps. See [AGENTS.md](../../AGENTS.md) and [STATUS.md](../../STATUS.md).
 
 REST API built with NestJS to manage **feature flags** (environment-specific feature toggles). Data is persisted in **PostgreSQL** (via Prisma), read operations are cached in **Redis**, and an **audit endpoint** is available to inspect changes.
 
@@ -448,8 +448,10 @@ REDIS_PORT=6379
 | `bun run start:prod`      | Run `dist/main.js`                      |
 | `bun run prisma:generate` | Regenerate Prisma client                |
 | `bun run test`            | Unit tests                              |
+| `bun run test:ci`         | Unit tests with coverage (CI)           |
 | `bun run test:e2e`        | End-to-end tests                        |
-| `bun run lint`            | ESLint                                  |
+| `bun run lint`            | ESLint with auto-fix                    |
+| `bun run lint:ci`         | ESLint strict, no warnings (CI)         |
 
 ---
 
@@ -523,11 +525,21 @@ bunx nest g service features
 
 ---
 
-# Current State & Potential Improvements
+# CI Integration (Phase 4)
 
-* Connect `AuditService.log()` inside `FlagsService.toggle()`.
-* Add PostgreSQL and Redis probes to `/health`.
-* Use `process.env.PORT` instead of a hardcoded port.
-* Remove or register the unused `AppController` and `AppService`.
+GitHub Actions runs from the repo root on every push/PR:
+
+- `bun run lint:ci` — ESLint on `src/**/*.ts`, zero warnings allowed
+- `bun run test:ci` — Jest with coverage; LCOV at `coverage/lcov.info` for SonarCloud
+- `DATABASE_URL` dummy required at install time (Prisma `postinstall` → `prisma generate`)
+- Production entrypoint: `dist/src/main.js` (not `dist/main.js`)
+
+Workflows: [`.github/workflows/ci.yaml`](../../.github/workflows/ci.yaml), [`security.yaml`](../../.github/workflows/security.yaml).
+
+---
+
+# Potential Improvements
+
+* Remove or register the unused `AppController` and `AppService` (Nest scaffold).
 * Update `test/app.e2e-spec.ts` to match the actual API routes.
-* Add authentication - who made the change? for audit logs
+* Add authentication — attribute audit log entries to a real user identity.
