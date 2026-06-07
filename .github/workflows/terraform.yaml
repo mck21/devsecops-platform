@@ -11,12 +11,14 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   terraform:
     name: Terraform ${{ matrix.environment }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
