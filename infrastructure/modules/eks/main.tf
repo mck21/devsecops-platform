@@ -80,3 +80,24 @@ resource "aws_eks_node_group" "main" {
     aws_eks_cluster.main
   ]
 }
+
+# --- CI/CD cluster access (GitHub Actions kubectl) ---
+resource "aws_eks_access_entry" "cicd" {
+  count = var.cicd_role_arn != "" ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = var.cicd_role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "cicd_admin" {
+  count = var.cicd_role_arn != "" ? 1 : 0
+
+  cluster_name  = aws_eks_cluster.main.name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = aws_eks_access_entry.cicd[0].principal_arn
+
+  access_scope {
+    type = "cluster"
+  }
+}

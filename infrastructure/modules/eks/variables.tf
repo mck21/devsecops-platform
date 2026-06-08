@@ -67,3 +67,9 @@ variable "node_max_size" {
   type        = number
   default     = 4
 }
+
+variable "cicd_role_arn" {
+  description = "IAM role ARN for GitHub Actions CD (EKS access entry). Empty disables access entry."
+  type        = string
+  default     = ""
+}

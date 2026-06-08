@@ -60,6 +60,7 @@ module "eks" {
   node_desired_size  = 2
   node_min_size      = 1
   node_max_size      = 4
+  cicd_role_arn      = module.iam.cicd_role_arn
 }
 
 module "ecr" {
