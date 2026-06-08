@@ -409,6 +409,51 @@ Local stack does not use Istio. Most K8s/Istio issues do not apply.
 
 ---
 
+## EKS staging CD (Phase 5)
+
+### Symptom: CD workflow fails on `git push`
+
+**Cause:** Branch protection blocks `GITHUB_TOKEN` writes to `main`.
+
+**Fix:** Allow GitHub Actions in branch rules, or set repository secret `CD_BOT_TOKEN` (PAT with `contents: write`) and re-run CD.
+
+### Symptom: CD fails at `Configure kubectl` or health check
+
+**Cause:** Staging `cicd` role lacks EKS access entry, or wrong cluster name.
+
+**Fix:**
+
+```bash
+cd infrastructure/environments/staging
+terraform apply   # creates aws_eks_access_entry for cicd role
+```
+
+Set GitHub variable `EKS_CLUSTER_NAME=mck21-devsecops-staging-eks`.
+
+### Symptom: ArgoCD OutOfSync on VirtualService weights
+
+**Cause:** Traffic switch updated Git; ArgoCD self-heal reconciled correctly — verify weights match `k8s/blue-green/virtualservice.yaml`.
+
+**Fix:** `kubectl get virtualservice backend -n staging -o yaml`. Source of truth is Git.
+
+### Symptom: Idle color pods ImagePullBackOff
+
+**Cause:** ECR tag from CD bump not pushed yet, or node lacks ECR pull permissions.
+
+**Fix:** Confirm CI pushed `sha-<commit>` to staging ECR. Check node IAM role includes ECR read.
+
+### Symptom: Public health check fails after traffic switch
+
+**Cause:** DNS not pointing at ingress LoadBalancer, or cert-manager pending.
+
+**Fix:** Use ALB hostname in `STAGING_HEALTH_URL` until DNS is ready. Check `kubectl get ingress -n staging` and cert-manager Certificate status.
+
+### Bootstrap reference
+
+Full one-time EKS staging setup: [k8s/argocd/install-notes.md](k8s/argocd/install-notes.md).
+
+---
+
 ## Related Files
 
 | Topic | File |
@@ -424,6 +469,8 @@ Local stack does not use Istio. Most K8s/Istio issues do not apply.
 | Dev ResourceQuota patch | [`k8s/overlays/dev/patch-resourcequota.yaml`](k8s/overlays/dev/patch-resourcequota.yaml) |
 | Secret template | [`k8s/base/secret.yaml`](k8s/base/secret.yaml) |
 | Istio install notes | [`k8s/istio/istio-notes.md`](k8s/istio/istio-notes.md) |
+| CD scripts | [`scripts/`](scripts/) |
+| Production CD (deferred) | [`docs/cd-production-promotion.md`](docs/cd-production-promotion.md) |
 
 ---
 

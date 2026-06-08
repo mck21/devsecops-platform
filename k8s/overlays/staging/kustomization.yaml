@@ -3,14 +3,25 @@ kind: Kustomization
 
 namespace: staging
 
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "0"
+
 resources:
   - ../../base
+  - ../../blue-green
+  - active-color.yaml
 
 patches:
-  - path: patch-deployment.yaml
+  - path: patch-delete-backend.yaml
+  - path: patch-delete-hpa.yaml
   - path: patch-ingress.yaml
+  - path: patch-blue-deployment.yaml
+  - path: patch-green-deployment.yaml
 
 images:
-  - name: backend
-    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/devsecops-staging-backend
+  - name: backend-blue
+    newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-staging-backend
+    newTag: latest
+  - name: backend-green
+    newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-staging-backend
     newTag: latest

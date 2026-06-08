@@ -21,7 +21,7 @@ Entry point for AI agents working on this repository. Read this file first, then
 | Dev cluster | Minikube (local) |
 | Staging / Production | EKS on AWS |
 
-**Current phase:** Phase 3 complete. **Next:** Phase 4 — CI Pipeline. See [STATUS.md](STATUS.md).
+**Current phase:** Phase 5 implemented (staging-first CD). **Next:** Validate CD on EKS staging, then Phase 6 — Security Hardening. See [STATUS.md](STATUS.md).
 
 ---
 
@@ -33,7 +33,8 @@ devsecops-platform/
 ├── app/frontend/         # Empty — reserved for future UI
 ├── infrastructure/       # Terraform modules + staging/production envs
 ├── k8s/                  # Kustomize manifests (base + overlays + blue-green + argocd)
-├── .github/workflows/    # Empty — Phase 4
+├── .github/workflows/    # ci.yaml, cd.yaml, security.yaml, terraform.yaml
+├── scripts/              # blue/green CD automation (Phase 5)
 ├── docs/                 # Placeholder — full docs in Phase 9
 ├── images/phase-N/       # Screenshot evidence per phase
 ├── docker-compose.yml    # Local dev stack (postgres + redis + backend)
@@ -117,14 +118,12 @@ Summary:
 
 | Deferred to | Do not implement yet |
 |-------------|---------------------|
-| Phase 4 | GitHub Actions CI, ECR push, SonarCloud gate |
-| Phase 5 | ArgoCD auto-sync, CD image-tag updates, blue/green traffic switch scripts |
-| Phase 5 | Live EKS deploy of the application |
 | Phase 6 | Kyverno policies, NetworkPolicy, External Secrets, manifest `securityContext` |
 | Phase 7 | Grafana dashboards, Loki, custom Prometheus ServiceMonitors |
 | Phase 9 | Full `docs/`, ADRs, architecture diagrams |
+| End of PLAN | Production CD auto-sync — see [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
 
-**Scaffolding exists but is not wired:** `k8s/argocd/application-*.yaml`, `k8s/blue-green/`, `k8s/overlays/staging|production/` — do not connect to live CD until Phase 5.
+**Phase 5 (staging-first):** CD auto-deploys to **staging EKS only**. Dev is manual. Run EKS bootstrap once: [k8s/argocd/install-notes.md](k8s/argocd/install-notes.md). Set GitHub vars `EKS_CLUSTER_NAME`, `STAGING_HEALTH_URL`.
 
 ---
 
@@ -144,6 +143,10 @@ Summary:
 | Terraform staging/prod | `infrastructure/environments/staging/`, `production/` |
 | Phase roadmap | `PLAN.md` |
 | Phase progress | `STATUS.md` |
+| CI / CD workflows | `.github/workflows/ci.yaml`, `.github/workflows/cd.yaml` |
+| CD scripts | `scripts/gitops-bump.sh`, `scripts/blue-green-switch.sh`, `scripts/rollback.sh` |
+| SonarCloud config | `sonar-project.properties` |
+| GitHub OIDC (Terraform) | `infrastructure/modules/github-oidc/` |
 
 ---
 
@@ -157,12 +160,12 @@ Summary:
 
 ---
 
-## Tech Stack Note for CI (Phase 4)
+## Tech Stack Note — CI (Phase 4, done)
 
-The application is **NestJS / TypeScript / Jest / Bun**, not Python. When implementing Phase 4 CI:
+The application is **NestJS / TypeScript / Jest / Bun**, not Python:
 
-- Lint: ESLint (not ruff)
-- Tests: Jest with coverage (not pytest)
-- SonarCloud: TypeScript sources under `app/backend/src/`
+- Lint: ESLint via `bun run lint:ci` (not ruff)
+- Tests: Jest with coverage via `bun run test:ci` (not pytest)
+- SonarCloud: TypeScript sources under `app/backend/src/`; quality gate via GitHub App check on free plan
 
-Some older references in PLAN.md Phase 4 may still mention Python — treat NestJS/TypeScript as the source of truth.
+Some older references in [PLAN.md](PLAN.md) may still mention Python — treat NestJS/TypeScript as the source of truth.

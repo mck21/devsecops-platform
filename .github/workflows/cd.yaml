@@ -1,0 +1,150 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NAMESPACE: staging
+  OVERLAY_PATH: k8s/overlays/staging
+
+jobs:
+  gate:
+    name: Gate on CI success
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      sha_tag: sha-${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Validate CI conclusion
+        run: echo "Deploying ${{ github.event.workflow_run.head_sha }}"
+
+  gitops-bump:
+    name: GitOps image bump
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      idle_color: ${{ steps.bump.outputs.idle_color }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          token: ${{ secrets.CD_BOT_TOKEN || github.token }}
+
+      - name: Bump idle color image tag
+        id: bump
+        run: |
+          OUTPUT="$(./scripts/gitops-bump.sh "${{ needs.gate.outputs.sha_tag }}")"
+          eval "$OUTPUT"
+          echo "idle_color=${idle_color}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push tag bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${{ env.OVERLAY_PATH }}/kustomization.yaml"
+          git commit -m "chore(cd): bump staging ${{ steps.bump.outputs.idle_color }} to ${{ needs.gate.outputs.sha_tag }} [skip ci]"
+          git push
+
+  deploy:
+    name: Sync, health check, traffic switch
+    needs: [gate, gitops-bump]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          token: ${{ secrets.CD_BOT_TOKEN || github.token }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.PROJECT_NAME }}-staging-cicd-role
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ vars.EKS_CLUSTER_NAME }}" \
+            --region "${{ vars.AWS_REGION }}"
+
+      - name: Wait for ArgoCD sync and rollout
+        run: ./scripts/blue-green-health.sh "${{ needs.gitops-bump.outputs.idle_color }}" "${{ env.NAMESPACE }}"
+
+      - name: Switch traffic to new color
+        run: |
+          ./scripts/blue-green-switch.sh "${{ needs.gitops-bump.outputs.idle_color }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add k8s/blue-green/virtualservice.yaml k8s/overlays/staging/active-color.yaml
+          git commit -m "chore(cd): switch staging traffic to ${{ needs.gitops-bump.outputs.idle_color }} [skip ci]"
+          git push
+
+      - name: Public health check
+        if: ${{ vars.STAGING_HEALTH_URL != '' }}
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "${{ vars.STAGING_HEALTH_URL }}"; then
+              echo "Public health check passed"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Public health check failed" >&2
+          exit 1
+
+  rollback:
+    name: Rollback on failure
+    needs: [gate, gitops-bump, deploy]
+    if: failure() && needs.gate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.CD_BOT_TOKEN || github.token }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.PROJECT_NAME }}-staging-cicd-role
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ vars.EKS_CLUSTER_NAME }}" \
+            --region "${{ vars.AWS_REGION }}"
+
+      - name: Revert traffic and active color
+        run: |
+          ACTIVE="$(grep 'ACTIVE_COLOR:' k8s/overlays/staging/active-color.yaml | awk '{print $2}')"
+          if [[ "$ACTIVE" == "${{ needs.gitops-bump.outputs.idle_color }}" ]]; then
+            ./scripts/rollback.sh
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add k8s/blue-green/virtualservice.yaml k8s/overlays/staging/active-color.yaml
+            git diff --cached --quiet || git commit -m "chore(cd): rollback staging traffic [skip ci]"
+            git push || true
+          fi
+
+      - name: Revert image tag bump commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BUMP_SHA="$(git log -1 --grep 'bump staging' --format=%H || true)"
+          if [[ -n "$BUMP_SHA" ]]; then
+            git revert --no-edit "$BUMP_SHA" || true
+            git push || true
+          fi

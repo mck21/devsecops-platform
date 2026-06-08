@@ -31,8 +31,9 @@ The application is a **Feature Flag Service** — manage feature toggles per env
 | 1 | AWS Infrastructure (Terraform) | Done |
 | 2 | Kubernetes base (Minikube + Istio) | Done |
 | 3 | Feature Flag Service + K8s manifests | **Done** |
-| 4 | CI Pipeline (GitHub Actions, SonarCloud) | Next |
-| 5–9 | CD, Security, Monitoring, DR, Docs | Planned |
+| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** |
+| 5 | CD Pipeline & GitOps (ArgoCD, staging-first) | **Implemented** — validate on EKS |
+| 6–9 | Security, Monitoring, DR, Docs | Planned |
 
 Full tracker: [STATUS.md](STATUS.md) · Full roadmap: [PLAN.md](PLAN.md)
 

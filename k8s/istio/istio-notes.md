@@ -1,22 +1,15 @@
-# Istio Installation
+## Staging / Production (EKS)
 
-## Dev (Minikube)
-Installed via istioctl with demo profile:
-istioctl install --set profile=demo -y
+Install Istio with the production profile during Phase 5 bootstrap:
 
-Istio version used: 1.30.0
-
-Addons installed:
-- Kiali (service mesh topology)
-- Jaeger (distributed tracing)
-- Prometheus (metrics, Istio-scoped)
-
-Access dashboards:
-istioctl dashboard kiali
-istioctl dashboard jaeger
+```bash
+istioctl install --set profile=production -y
+kubectl label namespace staging istio-injection=enabled --overwrite
+```
 
 Sidecar injection enabled on namespaces:
-- dev
 
-## Staging/Production (EKS)
-Installed via istioctl with production profile in Phase 5.
+- staging
+- production
+
+Full bootstrap: [k8s/argocd/install-notes.md](../argocd/install-notes.md).

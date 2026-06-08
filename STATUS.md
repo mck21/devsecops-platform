@@ -1,8 +1,8 @@
 # Project Status
 
-Phase tracker for the DevSecOps platform. Updated after Phase 3 completion.
+Phase tracker for the DevSecOps platform. Updated after Phase 5 implementation.
 
-**Active work:** Phase 4 — CI Pipeline  
+**Active work:** Phase 5 validation on EKS staging (screenshots)  
 **Agent entry point:** [AGENTS.md](AGENTS.md)  
 **Deploy runbook:** [TROUBLESHOOTING.md](TROUBLESHOOTING.md)  
 **Full roadmap:** [PLAN.md](PLAN.md)
@@ -17,8 +17,8 @@ Phase tracker for the DevSecOps platform. Updated after Phase 3 completion.
 | 1 | Terraform & AWS (VPC, EKS, ECR, IAM) | Done | `infrastructure/`, `images/phase-1/` |
 | 2 | Kubernetes base (Minikube: Istio, ArgoCD, Ingress) | Done (Minikube) | `k8s/namespaces/`, `images/phase-2/`, install notes in `k8s/argocd/`, `k8s/istio/` |
 | 3 | Feature Flag Service + K8s manifests | **Done** | `app/backend/`, `k8s/`, `images/phase-3/` |
-| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | Not started | `.github/workflows/` empty |
-| 5 | CD & GitOps (ArgoCD sync, blue/green automation) | Not started | Scaffolding in `k8s/argocd/`, `k8s/blue-green/` |
+| 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** | `.github/workflows/`, `sonar-project.properties`, `images/phase-4/` |
+| 5 | CD & GitOps (ArgoCD sync, blue/green automation) | **Implemented** (staging-first) | `.github/workflows/cd.yaml`, `scripts/`, `images/phase-5/` |
 | 6 | Security hardening (Kyverno, Cosign, NetworkPolicy) | Not started | — |
 | 7 | Monitoring & SRE (Prometheus, Grafana, Loki) | Not started | `monitoring/` placeholder |
 | 8 | DR & resilience (Velero, k6) | Not started | — |
@@ -26,78 +26,52 @@ Phase tracker for the DevSecOps platform. Updated after Phase 3 completion.
 
 ---
 
-## Phase 3 — Completion Details
+## Phase 5 — Implementation Details (staging-first)
 
-All criteria met. See [PLAN.md § Phase 3 Completion Criteria](PLAN.md) for the full checklist (marked `[x]`).
+Automatic CD targets **staging EKS only**. Dev (Minikube) remains manual. Production CD deferred — see [docs/cd-production-promotion.md](docs/cd-production-promotion.md).
 
-### Application
+### Delivered
 
-- NestJS API with flags, audit, health, metrics modules
-- Redis cache on flag reads; PostgreSQL source of truth + audit log
-- Structured JSON logging (pino) with request IDs
-- Docker Compose local stack; multi-stage Dockerfile with non-root user
+- [`.github/workflows/cd.yaml`](.github/workflows/cd.yaml) — post-CI GitOps bump, rollout health check, traffic switch, rollback
+- [`scripts/`](scripts/) — `gitops-bump.sh`, `blue-green-switch.sh`, `blue-green-health.sh`, `rollback.sh`
+- [`k8s/overlays/staging/`](k8s/overlays/staging/) — blue/green overlay, sync waves, `cd-active-color` ConfigMap
+- [`k8s/argocd/install-notes.md`](k8s/argocd/install-notes.md) — EKS staging bootstrap runbook
+- Terraform EKS access entry for staging `cicd` role ([`infrastructure/modules/eks/`](infrastructure/modules/eks/))
+- CI: `[skip ci]` guard; production ECR gated by `ENABLE_PROD_ECR` (default off)
 
-### Kubernetes — dev (Minikube)
+### GitHub variables required
 
-- `kubectl apply -k k8s/overlays/dev` deploys backend, postgres, redis, HPA
-- LimitRange, ResourceQuota, ServiceAccount, Istio TCP DestinationRules applied
-- HPA: `minReplicas: 1` (dev patch), `maxReplicas: 10` (base)
+| Variable | Example |
+|----------|---------|
+| `EKS_CLUSTER_NAME` | `mck21-devsecops-staging-eks` |
+| `STAGING_HEALTH_URL` | `https://<alb-hostname>/health` |
 
-### Kubernetes — scaffolding (not live-deployed)
+Optional: `ENABLE_PROD_ECR=true`, secret `CD_BOT_TOKEN` if branch protection blocks `GITHUB_TOKEN`.
 
-- `k8s/overlays/staging/` and `k8s/overlays/production/` with ECR placeholders
-- `k8s/argocd/application-{dev,staging,production}.yaml`
-- `k8s/blue-green/` (deployments + VirtualService + DestinationRule)
+### Pending validation
 
-### Screenshots
-
-Located in `images/phase-3/`:
-
-| File | Content |
-|------|---------|
-| `01-docker-compose-running.png` | Docker Compose stack up |
-| `02-post-create-flag.png` | POST /api/flags |
-| `03-patch-toggle-flag.png` | PATCH toggle |
-| `04-get-audit-history.png` | GET /api/audit |
-| `05-get-prometheus-metrics.png` | GET /metrics |
-| `06-health-checks.png` | GET /health |
-| `07-k8s-pods-dev.png` | Pods running in dev namespace |
-
----
-
-## Active Work — Phase 4
-
-**Goal:** Every push triggers lint, test, SonarCloud quality gate, security scans, Docker build, and ECR push.
-
-**Key deliverables:**
-
-- `.github/workflows/ci.yaml` — main pipeline
-- `.github/workflows/security.yaml` — standalone security scans
-- `.github/workflows/terraform.yaml` — terraform validate/plan
-- `sonar-project.properties` — SonarCloud config for TypeScript
-- AWS OIDC auth for ECR push (no long-lived keys)
-
-**Stack correction:** Application is NestJS/TypeScript/Jest — not Python. See [AGENTS.md § Tech Stack Note](AGENTS.md).
+- [ ] One-time EKS staging bootstrap per install notes
+- [ ] `terraform apply` in staging for EKS access entry
+- [ ] Merge to `main` → CI → CD green
+- [ ] Screenshots in [`images/phase-5/`](images/phase-5/) per README checklist
 
 ---
 
 ## Blockers / Deferred
 
-| Item | Reason | Target Phase |
-|------|--------|--------------|
-| Live EKS app deploy | Requires CI image push + CD wiring | 4 + 5 |
-| ArgoCD auto-sync | CD pipeline not built | 5 |
-| EKS platform components (Ingress, Cert Manager on EKS) | Partially done in Phase 2; full parity deferred | 2 EKS + 5 |
-| `infrastructure/environments/dev/` | Empty by design — dev runs on Minikube | N/A |
-| Architecture diagram, full deployment guide | Portfolio polish | 9 |
-| Grafana dashboards | Monitoring stack not installed | 7 |
+| Item | Reason | Target |
+|------|--------|--------|
+| Production CD | Staging-first cost/risk strategy | [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
+| Dev automated CD | Minikube not reachable from GitHub-hosted runners | Manual dev deploy |
+| Architecture diagram, full deployment guide | Portfolio polish | Phase 9 |
+| Grafana dashboards | Monitoring stack not installed | Phase 7 |
 
 ---
 
 ## Environment Strategy
 
-| Environment | Kubernetes | Status |
-|-------------|------------|--------|
-| `dev` | Minikube (local) | App deployed and validated |
-| `staging` | EKS (AWS) | Terraform ready; app not deployed |
-| `production` | EKS (AWS) | Terraform ready; app not deployed |
+| Environment | Kubernetes | CD |
+|-------------|------------|-----|
+| `dev` | Minikube (local) | Manual |
+| `staging` | EKS (AWS) | **Automatic** (merge to `main`) |
+| `production` | EKS (AWS) | Deferred |
