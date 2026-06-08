@@ -1,5 +1,4 @@
-# Blue/green skeleton — not included in dev overlay by default.
-# Switch traffic via VirtualService in Phase 5 automation.
+# Blue/green — wired in staging overlay; traffic switch via scripts/cd pipeline.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,6 +6,8 @@ metadata:
   labels:
     app: backend
     version: blue
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   replicas: 1
   selector:
@@ -22,7 +23,7 @@ spec:
       serviceAccountName: backend-sa
       containers:
         - name: backend
-          image: backend:latest
+          image: backend-blue:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
