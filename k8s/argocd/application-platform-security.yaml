@@ -1,0 +1,24 @@
+# Cluster-scoped security baseline: RBAC + NetworkPolicies. (Phase 6)
+# Apply on each cluster's ArgoCD. Runtime is off for production during showcase.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-security
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mck21/devsecops-platform.git
+    targetRevision: main
+    path: k8s/security
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

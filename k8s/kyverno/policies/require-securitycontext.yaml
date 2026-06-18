@@ -1,0 +1,65 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-securitycontext
+  annotations:
+    policies.kyverno.io/title: Require Hardened securityContext
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      App containers must drop ALL capabilities, disable privilege escalation and
+      use a read-only root filesystem. Audit on dev, Enforce on production.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: securitycontext-prod
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - production
+              selector:
+                matchLabels:
+                  app: backend
+      validate:
+        failureAction: Enforce
+        message: >-
+          backend containers must set allowPrivilegeEscalation:false,
+          readOnlyRootFilesystem:true and drop ALL capabilities.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+                  readOnlyRootFilesystem: "true"
+                  capabilities:
+                    drop:
+                      - ALL
+    - name: securitycontext-dev-staging-audit
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - dev
+                - staging
+              selector:
+                matchLabels:
+                  app: backend
+      validate:
+        message: >-
+          backend containers should set allowPrivilegeEscalation:false,
+          readOnlyRootFilesystem:true and drop ALL capabilities.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+                  readOnlyRootFilesystem: "true"
+                  capabilities:
+                    drop:
+                      - ALL

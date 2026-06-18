@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - disallow-privileged.yaml
+  - require-resource-limits.yaml
+  - require-non-root.yaml
+  - disallow-latest-tag.yaml
+  - require-securitycontext.yaml
+  - verify-images-cosign.yaml

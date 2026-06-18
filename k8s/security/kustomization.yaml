@@ -1,0 +1,8 @@
+# RBAC + NetworkPolicies. Applied cluster-wide (not per-overlay) via the
+# platform-security ArgoCD Application or `kubectl apply -k k8s/security`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - rbac.yaml
+  - network-policies.yaml

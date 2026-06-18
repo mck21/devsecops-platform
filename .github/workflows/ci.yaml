@@ -137,6 +137,7 @@ jobs:
           echo "sha_tag=sha-${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Push to staging ECR
+        id: push
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: app/backend
@@ -147,14 +148,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Push to production ECR
-        if: github.ref == 'refs/heads/main' && vars.ENABLE_PROD_ECR == 'true'
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
-        with:
-          context: app/backend
-          push: true
-          tags: |
-            ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.PROJECT_NAME }}-production-backend:${{ steps.tags.outputs.sha_tag }}
-            ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.PROJECT_NAME }}-production-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Supply-chain: keyless Cosign signature (Sigstore/Fulcio via GitHub OIDC).
+      # Kyverno verify-image-signatures admits only images signed here. (Phase 6)
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
+      - name: Sign image (keyless)
+        env:
+          COSIGN_YES: "true"
+        run: |
+          cosign sign "${{ steps.tags.outputs.staging }}@${{ steps.push.outputs.digest }}"
