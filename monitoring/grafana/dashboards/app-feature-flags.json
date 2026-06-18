@@ -14,7 +14,7 @@
         "name": "namespace",
         "type": "query",
         "datasource": "Prometheus",
-        "query": "label_values(istio_requests_total{destination_workload=\"backend\"}, destination_workload_namespace)",
+        "query": "label_values(istio_requests_total{destination_canonical_service=\"backend\"}, destination_workload_namespace)",
         "refresh": 2,
         "includeAll": true
       }
@@ -28,7 +28,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\",destination_workload_namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\",destination_workload_namespace=~\"$namespace\"}[5m]))",
           "legendFormat": "total"
         }
       ]
@@ -41,7 +41,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\",response_code=~\"5..\"}[5m])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\"}[5m])), 1)",
+          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\",response_code=~\"5..\"}[5m])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\"}[5m])), 1)",
           "legendFormat": "error ratio"
         }
       ]
@@ -54,7 +54,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_workload=\"backend\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_canonical_service=\"backend\"}[5m])) by (le))",
           "legendFormat": "p95"
         }
       ]
