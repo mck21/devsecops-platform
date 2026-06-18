@@ -1,0 +1,51 @@
+# kube-prometheus-stack values — dev (Minikube). Single replica, ephemeral storage.
+# helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#   -n monitoring -f monitoring/prometheus/values-dev.yaml
+fullnameOverride: kube-prometheus-stack
+
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    replicas: 1
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    # emptyDir (no storageSpec) -> ephemeral, fine for local iteration.
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 1
+
+grafana:
+  replicas: 1
+  adminPassword: admin   # local only
+  service:
+    type: ClusterIP      # access via: kubectl port-forward svc/kube-prometheus-stack-grafana 3001:80
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: monitoring
+  dashboards:
+    default:
+      kubernetes-cluster:
+        gnetId: 7249
+        revision: 1
+        datasource: Prometheus
+      istio-mesh:
+        gnetId: 7639
+        revision: 1
+        datasource: Prometheus
+
+# Reduce footprint on Minikube.
+nodeExporter:
+  enabled: true
+kubeStateMetrics:
+  enabled: true

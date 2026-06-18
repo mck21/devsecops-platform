@@ -1,0 +1,10 @@
+# Cluster-side monitoring CRs (ServiceMonitor, PrometheusRule) + Grafana dashboards.
+# Requires kube-prometheus-stack (CRDs) installed via Helm first.
+# Apply: kubectl apply -k monitoring
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - prometheus/servicemonitor-backend.yaml
+  - prometheus/prometheusrules.yaml
+  - grafana/dashboards

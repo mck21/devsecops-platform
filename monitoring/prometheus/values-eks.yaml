@@ -1,0 +1,102 @@
+# kube-prometheus-stack values — staging/production (EKS).
+# helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#   -n monitoring -f monitoring/prometheus/values-eks.yaml
+fullnameOverride: kube-prometheus-stack
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    replicas: 2
+    # Select ServiceMonitors/PrometheusRules from all namespaces (not just chart's).
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 2
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+
+grafana:
+  replicas: 2
+  adminPassword: ""  # set via existingSecret in real deploys; never commit
+  admin:
+    existingSecret: grafana-admin
+  service:
+    type: LoadBalancer
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - grafana.example.com
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.example.com
+  # Provision dashboards from ConfigMaps labelled grafana_dashboard (sidecar).
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: monitoring
+    datasources:
+      enabled: true
+  # Import curated community dashboards by Grafana.com ID.
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: ""
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  dashboards:
+    default:
+      kubernetes-cluster:
+        gnetId: 7249
+        revision: 1
+        datasource: Prometheus
+      istio-mesh:
+        gnetId: 7639
+        revision: 1
+        datasource: Prometheus
+      node-exporter:
+        gnetId: 1860
+        revision: 37
+        datasource: Prometheus
+
+# Loki datasource is added by the loki-stack release; declare it here too so
+# Explore works out of the box.
+additionalDataSources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki.monitoring.svc.cluster.local:3100

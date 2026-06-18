@@ -1,0 +1,123 @@
+# Recording + alerting rules for the Feature Flag Service.
+# SLIs are derived from Istio mesh telemetry (reporter="destination") so they
+# measure what clients actually experience, independent of app instrumentation.
+#
+# SLOs (see docs/sre.md):
+#   Availability 99.9%  ->  error budget 0.1%
+#   P95 latency  <= 300ms (GET /api/flags/{key})
+#   Error rate   <  0.1%
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: backend-slo-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: backend.sli.recording
+      interval: 30s
+      rules:
+        # Error ratio (5xx / total) over multiple windows for burn-rate alerting.
+        - record: backend:request_errors:ratio_rate5m
+          expr: |
+            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[5m])), 1)
+        - record: backend:request_errors:ratio_rate30m
+          expr: |
+            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[30m]))
+            /
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[30m])), 1)
+        - record: backend:request_errors:ratio_rate1h
+          expr: |
+            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[1h]))
+            /
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[1h])), 1)
+        - record: backend:request_errors:ratio_rate6h
+          expr: |
+            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[6h]))
+            /
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[6h])), 1)
+        # Availability SLI (non-5xx ratio).
+        - record: backend:availability:ratio_rate5m
+          expr: 1 - backend:request_errors:ratio_rate5m
+        # P95 latency (ms) for cached flag reads.
+        - record: backend:request_latency_p95_ms:5m
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(istio_request_duration_milliseconds_bucket{reporter="destination",destination_workload="backend"}[5m])) by (le))
+
+    - name: backend.slo.burnrate
+      rules:
+        # Fast burn: 14.4x budget over 1h AND 5m windows -> page.
+        - alert: BackendErrorBudgetFastBurn
+          expr: |
+            backend:request_errors:ratio_rate1h > (14.4 * 0.001)
+            and
+            backend:request_errors:ratio_rate5m > (14.4 * 0.001)
+          for: 2m
+          labels:
+            severity: critical
+            slo: availability
+          annotations:
+            summary: "Backend error budget fast burn (14.4x)"
+            description: "5xx ratio is burning the 99.9% availability budget >14.4x over 1h and 5m."
+        # Slow burn: 6x budget over 6h AND 30m windows -> ticket.
+        - alert: BackendErrorBudgetSlowBurn
+          expr: |
+            backend:request_errors:ratio_rate6h > (6 * 0.001)
+            and
+            backend:request_errors:ratio_rate30m > (6 * 0.001)
+          for: 15m
+          labels:
+            severity: warning
+            slo: availability
+          annotations:
+            summary: "Backend error budget slow burn (6x)"
+            description: "5xx ratio is burning the availability budget >6x over 6h and 30m."
+
+    - name: backend.alerts
+      rules:
+        - alert: BackendHighErrorRate
+          expr: backend:request_errors:ratio_rate5m > 0.05
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend 5xx error rate > 5%"
+            description: "Error rate {{ $value | humanizePercentage }} over the last 5m."
+        - alert: BackendHighLatencyP95
+          expr: backend:request_latency_p95_ms:5m > 300
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend P95 latency > 300ms"
+            description: "P95 latency is {{ $value }}ms (SLO 300ms)."
+        - alert: BackendPodCrashLooping
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace=~"dev|staging|production",container="backend"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend pod crash looping"
+            description: "Pod {{ $labels.pod }} restarted >3 times in 15m."
+        - alert: BackendTargetDown
+          expr: up{job=~".*backend.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend scrape target down"
+            description: "Prometheus cannot scrape backend in {{ $labels.namespace }}."
+        - alert: NodeMemoryHigh
+          expr: |
+            (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node memory > 85%"
+            description: "Node {{ $labels.instance }} memory usage above 85%."

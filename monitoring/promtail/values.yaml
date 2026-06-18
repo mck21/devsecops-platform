@@ -1,0 +1,28 @@
+# Promtail — ships node/pod logs to Loki. Same values work on Minikube and EKS.
+# helm install promtail grafana/promtail -n monitoring -f monitoring/promtail/values.yaml
+config:
+  clients:
+    - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+  snippets:
+    # Promote structured fields from the app's pino JSON logs so they can be
+    # correlated with traces in Grafana (request_id / trace_id).
+    pipelineStages:
+      - cri: {}
+      - json:
+          expressions:
+            level: level
+            req_id: req.id
+            trace_id: trace_id
+      - labels:
+          level:
+
+daemonset:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi

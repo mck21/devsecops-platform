@@ -1,0 +1,19 @@
+# Wrap dashboard JSON as ConfigMaps the Grafana sidecar auto-imports
+# (label grafana_dashboard). disableNameSuffixHash keeps stable names for GitOps.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+
+configMapGenerator:
+  - name: dashboard-feature-flags
+    files:
+      - app-feature-flags.json
+  - name: dashboard-slo-error-budget
+    files:
+      - slo-error-budget.json
