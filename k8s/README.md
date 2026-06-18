@@ -12,8 +12,8 @@ k8s/
 ├── overlays/
 │   ├── dev/           # Minikube — deploy manually
 │   ├── staging/       # EKS — GitOps CD target (Phase 5)
-│   └── production/    # EKS — deferred CD
-├── blue-green/        # Istio blue/green (included in staging overlay)
+│   └── production/    # EKS — Git mirror of staging (runtime OFF)
+├── blue-green/        # Istio blue/green (staging + production overlays)
 ├── argocd/            # Application CRDs
 ├── platform/          # EKS platform manifests (cert-manager issuer)
 └── namespaces/        # Platform namespaces
@@ -24,10 +24,10 @@ k8s/
 | Path | Status | Notes |
 |------|--------|-------|
 | `overlays/dev/` | **Live** — manual Minikube | Full stack: backend, postgres, redis, HPA |
-| `overlays/staging/` | **Live** — ArgoCD + CD | Blue/green, ECR images, sync waves |
-| `overlays/production/` | Scaffolding | CD deferred — [docs/cd-production-promotion.md](../docs/cd-production-promotion.md) |
-| `blue-green/` | Wired in staging | Traffic switch via `scripts/blue-green-switch.sh` |
-| `argocd/` | Staging Application active | Bootstrap: [argocd/install-notes.md](argocd/install-notes.md) |
+| `overlays/staging/` | **Live runtime** — ArgoCD + CD | Blue/green, ECR, sync waves |
+| `overlays/production/` | **Off** — Git mirror, no runtime deploy | Same structure as staging; HA patches, `flags.example.com` |
+| `blue-green/` | Wired in staging + production overlays | Traffic switch via `scripts/blue-green-switch.sh` |
+| `argocd/` | Staging Application on cluster | Bootstrap: [argocd/install-notes.md](argocd/install-notes.md) |
 
 ## Deploy to Minikube (dev)
 
@@ -57,7 +57,7 @@ Add to `/etc/hosts`: `127.0.0.1 flags.dev.local` and run `minikube tunnel`.
 
 ## Staging (EKS) — GitOps CD
 
-**One-time bootstrap:** [k8s/argocd/install-notes.md](argocd/install-notes.md)
+**Full runbook:** [docs/showcase-staging-only.md](../docs/showcase-staging-only.md) · **Bootstrap:** [k8s/argocd/install-notes.md](argocd/install-notes.md)
 
 After bootstrap, merge to `main` triggers:
 
@@ -75,9 +75,11 @@ kubectl get application feature-flags-staging -n argocd
 
 GitHub variables: `EKS_CLUSTER_NAME`, `STAGING_HEALTH_URL`.
 
-## Production
+## Production (Git mirror — off)
 
-Overlay and ArgoCD Application exist in Git. Automatic deploy disabled until [docs/cd-production-promotion.md](../docs/cd-production-promotion.md) is activated.
+[`k8s/overlays/production/`](overlays/production/) mirrors staging (blue/green, sync waves, production ECR). Production runtime is **off** and not scheduled — staging is the only working pipeline. No `terraform apply production`, no `application-production.yaml` on cluster. Reference if it's ever turned on: [docs/cd-production-promotion.md](../docs/cd-production-promotion.md).
+
+When staging overlay changes, update production overlay in the same PR to keep the mirror aligned.
 
 ## Troubleshooting
 

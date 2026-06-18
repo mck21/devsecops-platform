@@ -1,16 +1,30 @@
+# Git mirror of k8s/overlays/staging/ — keep aligned when staging changes.
+# Production runtime is OFF (not deployed); staging is the only working pipeline.
+# Turning it on is an undecided next step; see docs/cd-production-promotion.md
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: production
 
+commonAnnotations:
+  argocd.argoproj.io/sync-wave: "0"
+
 resources:
   - ../../base
+  - ../../blue-green
+  - active-color.yaml
 
 patches:
-  - path: patch-deployment.yaml
+  - path: patch-delete-backend.yaml
+  - path: patch-delete-hpa.yaml
   - path: patch-ingress.yaml
+  - path: patch-blue-deployment.yaml
+  - path: patch-green-deployment.yaml
 
 images:
-  - name: backend
-    newName: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/devsecops-production-backend
+  - name: backend-blue
+    newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-production-backend
+    newTag: latest
+  - name: backend-green
+    newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-production-backend
     newTag: latest

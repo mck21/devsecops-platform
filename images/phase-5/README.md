@@ -1,5 +1,7 @@
 # Phase 5 — CD & GitOps evidence
 
+**Prerequisite:** Complete [docs/showcase-staging-only.md](../docs/showcase-staging-only.md) (terraform apply staging only, bootstrap EKS, push to `main`, CI + CD green).
+
 Capture screenshots after the staging CD pipeline runs end-to-end on EKS.
 
 ## Checklist
@@ -29,4 +31,4 @@ curl -f "$STAGING_HEALTH_URL"
 ## Notes
 
 - Dev (Minikube) CD is manual during Phase 5 — no screenshot required for phase closure.
-- Production ArgoCD screenshots deferred until [docs/cd-production-promotion.md](../docs/cd-production-promotion.md) is activated.
+- Production exists in Git as a staging mirror only — runtime is **off** and not scheduled, so no production screenshots. Reference if ever turned on: [docs/cd-production-promotion.md](../docs/cd-production-promotion.md).

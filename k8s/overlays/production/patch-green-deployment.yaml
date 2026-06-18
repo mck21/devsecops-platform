@@ -1,10 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: backend-green
 spec:
   replicas: 3
   template:
+    metadata:
+      annotations:
+        proxy.istio.io/config: |
+          holdApplicationUntilProxyStarts: true
     spec:
       containers:
         - name: backend
@@ -16,4 +20,3 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
-      # securityContext hardening applied in Phase 6
