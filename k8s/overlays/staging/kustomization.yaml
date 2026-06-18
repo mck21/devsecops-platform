@@ -22,7 +22,7 @@ patches:
 images:
   - name: backend-blue
     newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-staging-backend
-    newTag: latest
+    newTag: sha-5137706
   - name: backend-green
     newName: 125156866917.dkr.ecr.us-east-1.amazonaws.com/mck21-devsecops-staging-backend
-    newTag: latest
+    newTag: sha-5137706
