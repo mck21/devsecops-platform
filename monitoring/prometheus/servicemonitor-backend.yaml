@@ -1,0 +1,24 @@
+# Scrape the Feature Flag API /metrics endpoint (prom-client / @willsoto/nestjs-prometheus).
+# The `release` label lets the kube-prometheus-stack Prometheus select it.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    app: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  namespaceSelector:
+    matchNames:
+      - dev
+      - staging
+      - production
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

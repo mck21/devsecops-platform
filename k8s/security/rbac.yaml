@@ -1,0 +1,129 @@
+# RBAC — least-privilege roles per namespace plus a cluster-wide read-only role.
+# Subjects use groups (e.g. mapped from AWS IAM via aws-auth / EKS access entries,
+# or from an OIDC provider). No real identities are committed.
+---
+# Cluster-wide read-only access for on-call / auditors.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: platform-readonly
+  labels:
+    app.kubernetes.io/part-of: devsecops-platform
+rules:
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io", "autoscaling"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.istio.io", "security.istio.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: platform-readonly
+  labels:
+    app.kubernetes.io/part-of: devsecops-platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: platform-readonly
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: devsecops:auditors
+---
+# Developer role: manage app workloads in a namespace, read-only on RBAC/secrets.
+# Re-applied per app namespace below (dev / staging / production).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-developer
+  namespace: dev
+  labels:
+    app.kubernetes.io/part-of: devsecops-platform
+rules:
+  - apiGroups: ["", "apps", "autoscaling"]
+    resources: ["deployments", "replicasets", "pods", "pods/log", "services", "configmaps", "horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/portforward"]
+    verbs: ["create"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices", "destinationrules"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-developer
+  namespace: dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-developer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: devsecops:developers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-developer
+  namespace: staging
+  labels:
+    app.kubernetes.io/part-of: devsecops-platform
+rules:
+  - apiGroups: ["", "apps", "autoscaling"]
+    resources: ["deployments", "replicasets", "pods", "pods/log", "services", "configmaps", "horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices", "destinationrules"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-developer
+  namespace: staging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-developer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: devsecops:developers
+---
+# Production: developers are read-only. Mutations go through GitOps (ArgoCD) only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-developer
+  namespace: production
+  labels:
+    app.kubernetes.io/part-of: devsecops-platform
+rules:
+  - apiGroups: ["", "apps", "autoscaling"]
+    resources: ["deployments", "replicasets", "pods", "pods/log", "services", "configmaps", "horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices", "destinationrules"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-developer
+  namespace: production
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-developer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: devsecops:developers

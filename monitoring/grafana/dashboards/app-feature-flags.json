@@ -1,0 +1,92 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "Feature Flag Service",
+  "uid": "feature-flags-app",
+  "tags": ["devsecops", "application"],
+  "timezone": "",
+  "schemaVersion": 39,
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(istio_requests_total{destination_workload=\"backend\"}, destination_workload_namespace)",
+        "refresh": 2,
+        "includeAll": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Request rate (rps)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\",destination_workload_namespace=~\"$namespace\"}[5m]))",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "title": "5xx error ratio",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\",response_code=~\"5..\"}[5m])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\",destination_workload=\"backend\"}[5m])), 1)",
+          "legendFormat": "error ratio"
+        }
+      ]
+    },
+    {
+      "title": "P95 latency (ms) — flag reads",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_workload=\"backend\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "Redis cache hit ratio",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(flag_cache_hits_total[5m])) / clamp_min(sum(rate(flag_cache_hits_total[5m])) + sum(rate(flag_cache_misses_total[5m])), 1)",
+          "legendFormat": "hit ratio"
+        }
+      ]
+    },
+    {
+      "title": "HPA replicas",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"backend\"}",
+          "legendFormat": "{{namespace}} current"
+        },
+        {
+          "expr": "kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=\"backend\"}",
+          "legendFormat": "{{namespace}} max"
+        }
+      ]
+    }
+  ]
+}

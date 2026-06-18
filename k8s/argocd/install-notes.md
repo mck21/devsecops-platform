@@ -120,7 +120,7 @@ kubectl apply -k k8s/overlays/staging --dry-run=server
 kubectl apply -f k8s/argocd/application-staging.yaml
 ```
 
-Do **not** apply `application-production.yaml` until production CD is enabled (end of PLAN).
+Do **not** apply `application-production.yaml` — production runtime is off and not scheduled. Staging is the only working pipeline.
 
 ### 9. GitHub Actions CD variables
 
@@ -133,6 +133,6 @@ Set repository variables in GitHub → Settings → Variables:
 
 Ensure branch protection allows GitHub Actions to push GitOps commits to `main`, or configure `CD_BOT_TOKEN` secret.
 
-## Production (EKS)
+## Production (EKS) — off
 
-ArgoCD and app registration deferred until multi-env promotion is enabled. See [docs/cd-production-promotion.md](../../docs/cd-production-promotion.md).
+ArgoCD and app registration are **off** and not scheduled; production stays a Git mirror only. Reference if it's ever turned on: [docs/cd-production-promotion.md](../../docs/cd-production-promotion.md).
