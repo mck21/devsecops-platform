@@ -1,0 +1,55 @@
+# Velero backup schedules (EKS). Backups stored in S3, volumes via EBS snapshots.
+# Requires Velero installed with the AWS plugin — see install-notes.md.
+---
+# All namespaces, daily, 7-day retention.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-all-namespaces
+  namespace: velero
+spec:
+  schedule: "0 1 * * *"
+  template:
+    includedNamespaces:
+      - "*"
+    excludedResources:
+      - events
+      - events.events.k8s.io
+    snapshotVolumes: true
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    ttl: 168h0m0s
+---
+# Production namespace, every 6 hours, 14-day retention.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: production-6h
+  namespace: velero
+spec:
+  schedule: "0 */6 * * *"
+  template:
+    includedNamespaces:
+      - production
+    snapshotVolumes: true
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    ttl: 336h0m0s
+---
+# Persistent volumes (postgres/redis data), daily fs-backup, 7-day retention.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-volumes
+  namespace: velero
+spec:
+  schedule: "30 1 * * *"
+  template:
+    includedNamespaces:
+      - staging
+      - production
+    defaultVolumesToFsBackup: true
+    storageLocation: default
+    ttl: 168h0m0s
