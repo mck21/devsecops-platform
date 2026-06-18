@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant Dev
+    participant GH as GitHub Actions (CI)
+    participant Sonar as SonarCloud
+    participant ECR
+    participant CD as GitHub Actions (CD)
+    participant Git
+    participant Argo as ArgoCD (EKS staging)
+    Dev->>GH: push / merge to main
+    GH->>GH: lint (ESLint, yamllint, tf fmt)
+    GH->>GH: unit tests + coverage
+    GH->>Sonar: quality gate (PR check)
+    GH->>GH: Trivy image scan, docker build
+    GH->>ECR: push sha-<commit> + latest
+    GH->>ECR: cosign sign (keyless, OIDC)
+    GH->>CD: workflow_run on CI success
+    CD->>Git: bump idle color image tag [skip ci]
+    Argo->>Git: detect drift -> sync idle color
+    CD->>Argo: wait rollout healthy
+    CD->>Git: blue/green switch (VirtualService) [skip ci]
+    alt health check fails
+      CD->>Git: rollback traffic + revert tag
+    end

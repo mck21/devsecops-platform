@@ -1,0 +1,26 @@
+flowchart TB
+    subgraph AWS["AWS account 125156866917 (us-east-1)"]
+      s3[(S3 - tfstate, versioned + lockfile)]
+      ecr[(ECR - backend images)]
+      sm[(Secrets Manager)]
+      subgraph VPC["VPC (staging 10.0.0.0/16 / prod 10.1.0.0/16)"]
+        igw[Internet Gateway]
+        subgraph public[Public subnets - multi-AZ]
+          nat[NAT Gateway]
+          alb[ALB / Ingress NGINX]
+        end
+        subgraph private[Private subnets - multi-AZ]
+          subgraph eks[EKS cluster]
+            ng[Managed node groups - Spot + On-Demand]
+            irsa[IRSA OIDC provider]
+          end
+        end
+      end
+    end
+    igw --- public
+    public --- private
+    nat --- private
+    alb --> eks
+    eks -. pull .-> ecr
+    eks -. IRSA .-> sm
+    eks -. IRSA .-> s3

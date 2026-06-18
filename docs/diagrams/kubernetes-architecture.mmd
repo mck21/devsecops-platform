@@ -1,0 +1,41 @@
+flowchart TB
+    subgraph cluster["EKS staging cluster"]
+      subgraph istio["istio-system"]
+        gw[Istio ingress gateway]
+        istiod[istiod]
+      end
+      subgraph staging["namespace: staging (istio-injection)"]
+        vs[VirtualService backend]
+        blue[Deployment backend-blue]
+        green[Deployment backend-green]
+        svc[Service backend :80->3000]
+        hpa[HPA 2-10 @70% CPU]
+        pg[(postgres)]
+        rd[(redis)]
+        es[ExternalSecret -> backend-secrets]
+      end
+      subgraph policy["policy-system"]
+        kyv[Kyverno ClusterPolicies]
+      end
+      subgraph mon["monitoring"]
+        prom[Prometheus]
+        graf[Grafana]
+        loki[Loki]
+      end
+      subgraph argons["argocd"]
+        argo[ArgoCD]
+      end
+    end
+    gw --> vs
+    vs -->|weight 100/0| blue
+    vs --> green
+    blue --> svc
+    green --> svc
+    svc --> pg
+    svc --> rd
+    hpa -. scales .-> blue
+    kyv -. admission .-> staging
+    blue -. /metrics .-> prom
+    prom --> graf
+    loki --> graf
+    argo -. syncs .-> staging
