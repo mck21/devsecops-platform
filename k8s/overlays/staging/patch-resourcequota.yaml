@@ -1,0 +1,16 @@
+# Istio sidecars add ~2 CPU limit per pod; rolling updates briefly double pods.
+# Raise the namespace quota so blue/green + postgres/redis (all with sidecars)
+# fit. Mirrors the dev overlay patch. Requests stay low, so actual scheduling
+# fits the node capacity.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: namespace-quota
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "24"
+    limits.memory: 48Gi
+    pods: "40"
+    persistentvolumeclaims: "4"

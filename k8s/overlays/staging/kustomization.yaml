@@ -17,6 +17,7 @@ patches:
   - path: patch-ingress.yaml
   - path: patch-blue-deployment.yaml
   - path: patch-green-deployment.yaml
+  - path: patch-resourcequota.yaml
 
 images:
   - name: backend-blue
