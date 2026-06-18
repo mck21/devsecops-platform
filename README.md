@@ -33,9 +33,14 @@ The application is a **Feature Flag Service** — manage feature toggles per env
 | 3 | Feature Flag Service + K8s manifests | **Done** |
 | 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** |
 | 5 | CD Pipeline & GitOps (ArgoCD, staging-first) | **Implemented** — validate on EKS |
-| 6–9 | Security, Monitoring, DR, Docs | Planned |
+| 6 | Security hardening (Kyverno, Cosign, NetworkPolicy, External Secrets) | **Implemented** |
+| 7 | Monitoring & SRE (Prometheus, Grafana, Loki, SLOs) | **Implemented** |
+| 8 | DR & resilience (Velero, k6) | **Implemented** |
+| 9 | Docs, ADRs, cost | **Implemented** |
 
-Full tracker: [STATUS.md](STATUS.md) · Full roadmap: [PLAN.md](PLAN.md)
+All manifests/config/docs are committed. Live validation (EKS deploy + screenshots)
+is the remaining step — staging is the only counted runtime; production is a Git
+mirror that stays **off**. Full tracker: [STATUS.md](STATUS.md) · Roadmap: [PLAN.md](PLAN.md)
 
 ---
 
@@ -105,7 +110,27 @@ See [app/backend/README.md](app/backend/README.md) for `.env` and Prisma setup.
 
 ## Architecture
 
-> _Diagram coming in Phase 9_
+```mermaid
+flowchart LR
+    dev[Developer] -->|git push| GH[GitHub]
+    GH -->|CI: lint, test, Sonar, Trivy, build, sign| ECR[(ECR)]
+    GH -->|CD: GitOps bump| GH
+    subgraph AWS[AWS - staging EKS]
+      ArgoCD -->|sync| ns[staging namespace]
+      ns --> bg[Blue/Green Deployments]
+      bg --> istio[Istio VirtualService]
+      bg --> pg[(PostgreSQL)]
+      bg --> redis[(Redis cache)]
+      ECR -.image.-> bg
+      kyverno[Kyverno admission] -. verify .-> bg
+      prom[Prometheus] --> graf[Grafana]
+      bg -.metrics.-> prom
+    end
+    ArgoCD -. watches .-> GH
+```
+
+Detailed diagrams (AWS infra, CI/CD flow, Kubernetes layout) and rationale:
+[docs/architecture.md](docs/architecture.md). Decision records: [docs/adr/](docs/adr/).
 
 ---
 
@@ -140,11 +165,20 @@ docs/              Full documentation (Phase 9)
 
 ---
 
-## Deployment Guide
+## Documentation
 
-> _Full Minikube + EKS guide coming in Phase 9 (`docs/deployment-guide.md`)_
-
-Minikube dev deploy: [k8s/README.md](k8s/README.md)
+| Topic | Doc |
+|-------|-----|
+| Architecture & diagrams | [docs/architecture.md](docs/architecture.md), [docs/diagrams/](docs/diagrams/) |
+| Deployment (Minikube + EKS) | [docs/deployment-guide.md](docs/deployment-guide.md), [k8s/README.md](k8s/README.md) |
+| Security hardening | [docs/security.md](docs/security.md) |
+| Monitoring & observability | [docs/monitoring.md](docs/monitoring.md), [monitoring/README.md](monitoring/README.md) |
+| SRE — SLI/SLO/error budget | [docs/sre.md](docs/sre.md) |
+| Disaster recovery | [docs/disaster-recovery.md](docs/disaster-recovery.md) |
+| Resilience testing | [docs/resilience-testing.md](docs/resilience-testing.md) |
+| SonarCloud quality gate | [docs/sonarqube.md](docs/sonarqube.md) |
+| Cost estimates | [docs/cost.md](docs/cost.md) |
+| Architecture Decision Records | [docs/adr/](docs/adr/) |
 
 ---
 

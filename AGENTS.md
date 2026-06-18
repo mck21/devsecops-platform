@@ -21,7 +21,7 @@ Entry point for AI agents working on this repository. Read this file first, then
 | Dev cluster | Minikube (local) |
 | Staging / Production | EKS on AWS |
 
-**Current phase:** Phase 5 implemented (staging-first CD). **Next:** Validate CD on EKS staging, then Phase 6 — Security Hardening. See [STATUS.md](STATUS.md).
+**Current phase:** Phases 1–9 built as code/manifests/docs (staging-first; production off). **Next:** live EKS validation + screenshots (`terraform apply`, deploy, capture evidence). See [STATUS.md](STATUS.md).
 
 ---
 
@@ -33,7 +33,7 @@ devsecops-platform/
 ├── app/frontend/         # Empty — reserved for future UI
 ├── infrastructure/       # Terraform modules + staging/production envs
 ├── k8s/                  # Kustomize manifests (base + overlays + blue-green + argocd)
-├── .github/workflows/    # ci.yaml, cd.yaml, security.yaml, terraform.yaml
+├── .github/workflows/    # ci.yaml, cd.yaml (main)
 ├── scripts/              # blue/green CD automation (Phase 5)
 ├── docs/                 # Placeholder — full docs in Phase 9
 ├── images/phase-N/       # Screenshot evidence per phase
@@ -114,16 +114,26 @@ Summary:
 
 ---
 
-## Phase Boundaries — What NOT to Do Yet
+## Phase Boundaries — what's built vs deferred
 
-| Deferred to | Do not implement yet |
-|-------------|---------------------|
-| Phase 6 | Kyverno policies, NetworkPolicy, External Secrets, manifest `securityContext` |
-| Phase 7 | Grafana dashboards, Loki, custom Prometheus ServiceMonitors |
-| Phase 9 | Full `docs/`, ADRs, architecture diagrams |
-| End of PLAN | Production CD auto-sync — see [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
+Phases 1–9 are now **implemented as code/manifests/docs**. What remains is
+**manual/live** work, intentionally deferred:
 
-**Phase 5 (staging-first):** CD auto-deploys to **staging EKS only**. Dev is manual. Run EKS bootstrap once: [k8s/argocd/install-notes.md](k8s/argocd/install-notes.md). Set GitHub vars `EKS_CLUSTER_NAME`, `STAGING_HEALTH_URL`.
+| Status | Item |
+|--------|------|
+| Built | Phase 6 security (`k8s/security`, `k8s/kyverno`, `k8s/external-secrets`, securityContext, Cosign in `ci.yaml`) |
+| Built | Phase 7 monitoring (`monitoring/`, SLO rules, dashboards, `docs/sre.md`) |
+| Built | Phase 8 DR/resilience (`k8s/velero`, `tests/k6`, DR + resilience docs) |
+| Built | Phase 9 docs (`docs/` guides, `docs/adr/`, `docs/diagrams/*.mmd`) |
+| Deferred (manual) | Live EKS apply of the above, screenshots, diagram PNG exports, `terraform apply` |
+| Undecided | Production **runtime** (EKS apply, CD promote, ECR push) — **off**; reference [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
+
+> When changing app manifests, keep Kyverno policies and securityContext intact
+> (Phase 6 enforces them on staging/prod).
+
+**Showcase mode:** Staging is the only environment with a working pipeline. Production is **off** — it stays in Git as a **mirror** of staging overlays/Terraform, with no build, push, or deploy. Turning production runtime on is an open decision, not a committed phase. Runbook: [docs/showcase-staging-only.md](docs/showcase-staging-only.md). When staging overlay changes, align `k8s/overlays/production/` in the same PR.
+
+**Phase 5 CD:** auto-deploys to **staging EKS only**. Set GitHub vars `EKS_CLUSTER_NAME`, `STAGING_HEALTH_URL` (optional until Ingress ready).
 
 ---
 
@@ -146,6 +156,7 @@ Summary:
 | CI / CD workflows | `.github/workflows/ci.yaml`, `.github/workflows/cd.yaml` |
 | CD scripts | `scripts/gitops-bump.sh`, `scripts/blue-green-switch.sh`, `scripts/rollback.sh` |
 | SonarCloud config | `sonar-project.properties` |
+| Showcase runbook (staging-only) | [docs/showcase-staging-only.md](docs/showcase-staging-only.md) |
 | GitHub OIDC (Terraform) | `infrastructure/modules/github-oidc/` |
 
 ---
