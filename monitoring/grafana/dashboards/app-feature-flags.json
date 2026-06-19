@@ -41,7 +41,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\",response_code=~\"5..\"}[5m])) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\"}[5m])), 1)",
+          "expr": "(sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\",response_code=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\"}[5m])), 1)",
           "legendFormat": "error ratio"
         }
       ]
@@ -60,31 +60,27 @@
       ]
     },
     {
-      "title": "Redis cache hit ratio",
+      "title": "Requests by response code",
       "type": "timeseries",
       "datasource": "Prometheus",
-      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "sum(rate(flag_cache_hits_total[5m])) / clamp_min(sum(rate(flag_cache_hits_total[5m])) + sum(rate(flag_cache_misses_total[5m])), 1)",
-          "legendFormat": "hit ratio"
+          "expr": "sum by (response_code) (rate(istio_requests_total{reporter=\"destination\",destination_canonical_service=\"backend\"}[5m]))",
+          "legendFormat": "{{response_code}}"
         }
       ]
     },
     {
-      "title": "HPA replicas",
+      "title": "Backend replicas (blue/green)",
       "type": "timeseries",
       "datasource": "Prometheus",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "targets": [
         {
-          "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"backend\"}",
-          "legendFormat": "{{namespace}} current"
-        },
-        {
-          "expr": "kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler=\"backend\"}",
-          "legendFormat": "{{namespace}} max"
+          "expr": "sum by (namespace, deployment) (kube_deployment_status_replicas{deployment=~\"backend.*\"})",
+          "legendFormat": "{{namespace}}/{{deployment}}"
         }
       ]
     }
