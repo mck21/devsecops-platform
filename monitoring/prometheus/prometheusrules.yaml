@@ -21,24 +21,24 @@ spec:
         # Error ratio (5xx / total) over multiple windows for burn-rate alerting.
         - record: backend:request_errors:ratio_rate5m
           expr: |
-            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[5m]))
+            (sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend",response_code=~"5.."}[5m])) or vector(0))
             /
-            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[5m])), 1)
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend"}[5m])), 1)
         - record: backend:request_errors:ratio_rate30m
           expr: |
-            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[30m]))
+            (sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend",response_code=~"5.."}[30m])) or vector(0))
             /
-            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[30m])), 1)
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend"}[30m])), 1)
         - record: backend:request_errors:ratio_rate1h
           expr: |
-            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[1h]))
+            (sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend",response_code=~"5.."}[1h])) or vector(0))
             /
-            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[1h])), 1)
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend"}[1h])), 1)
         - record: backend:request_errors:ratio_rate6h
           expr: |
-            sum(rate(istio_requests_total{reporter="destination",destination_workload="backend",response_code=~"5.."}[6h]))
+            (sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend",response_code=~"5.."}[6h])) or vector(0))
             /
-            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_workload="backend"}[6h])), 1)
+            clamp_min(sum(rate(istio_requests_total{reporter="destination",destination_canonical_service="backend"}[6h])), 1)
         # Availability SLI (non-5xx ratio).
         - record: backend:availability:ratio_rate5m
           expr: 1 - backend:request_errors:ratio_rate5m
@@ -46,7 +46,7 @@ spec:
         - record: backend:request_latency_p95_ms:5m
           expr: |
             histogram_quantile(0.95,
-              sum(rate(istio_request_duration_milliseconds_bucket{reporter="destination",destination_workload="backend"}[5m])) by (le))
+              sum(rate(istio_request_duration_milliseconds_bucket{reporter="destination",destination_canonical_service="backend"}[5m])) by (le))
 
     - name: backend.slo.burnrate
       rules:

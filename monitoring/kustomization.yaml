@@ -6,5 +6,6 @@ kind: Kustomization
 
 resources:
   - prometheus/servicemonitor-backend.yaml
+  - prometheus/podmonitor-istio.yaml
   - prometheus/prometheusrules.yaml
   - grafana/dashboards
