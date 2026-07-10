@@ -66,7 +66,11 @@ kubectl rollout restart deployment/backend-blue -n staging   # pick up new value
 
 See [disaster-recovery.md → Procedure 1](disaster-recovery.md#procedure-1--restore-a-namespace).
 
-## Recording results
+## Recorded results
 
-Capture evidence (terminal output, Grafana HPA panel, ArgoCD rollback) under
-`images/phase-8/` when running the live drills.
+The live drill was run on staging EKS before the AWS environment was
+decommissioned — the deleted backend pod was recreated automatically with no
+downtime. That evidence set is final; the drills above remain runnable on any
+future cluster.
+
+![Pod deleted and automatically recovered](../images/phase-8/01-pod-recover.png)

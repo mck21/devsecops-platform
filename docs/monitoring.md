@@ -23,11 +23,17 @@ overview.
   across dev and EKS, independent of app code).
 - **Cluster:** node-exporter + kube-state-metrics (bundled).
 
+All targets reporting UP on the live staging cluster:
+
+![Prometheus targets up](../images/phase-7/02-prometheus-targets.png)
+
 ## Dashboards
 
 Custom: **Feature Flag Service** (`feature-flags-app`) and **SLO — Error Budget**
 (`slo-error-budget`), provisioned as `grafana_dashboard` ConfigMaps. Community:
 Kubernetes (7249), Istio Mesh (7639), Node Exporter (1860).
+
+![Grafana Feature Flag Service dashboard](../images/phase-7/01-grafana-dashboard.png)
 
 ## SLOs & alerting
 

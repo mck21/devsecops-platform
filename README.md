@@ -20,6 +20,8 @@
 
 The application is a **Feature Flag Service** — manage feature toggles per environment with Redis-cached reads and PostgreSQL audit logging. Similar to LaunchDarkly or Unleash, it serves as the demo workload for the full DevSecOps pipeline.
 
+> **Want to build this yourself?** Follow the [**Step-by-Step Guide**](docs/step-by-step.md) — a full walkthrough from empty AWS account to working GitOps pipeline, illustrated with evidence captured while this pipeline ran live.
+
 **For AI agents:** start with [AGENTS.md](AGENTS.md) and [STATUS.md](STATUS.md). Deploy issues: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ---
@@ -32,15 +34,16 @@ The application is a **Feature Flag Service** — manage feature toggles per env
 | 2 | Kubernetes base (Minikube + Istio) | Done |
 | 3 | Feature Flag Service + K8s manifests | **Done** |
 | 4 | CI Pipeline (GitHub Actions, SonarCloud, ECR) | **Done** |
-| 5 | CD Pipeline & GitOps (ArgoCD, staging-first) | **Implemented** — validate on EKS |
-| 6 | Security hardening (Kyverno, Cosign, NetworkPolicy, External Secrets) | **Implemented** |
-| 7 | Monitoring & SRE (Prometheus, Grafana, Loki, SLOs) | **Implemented** |
-| 8 | DR & resilience (Velero, k6) | **Implemented** |
-| 9 | Docs, ADRs, cost | **Implemented** |
+| 5 | CD Pipeline & GitOps (ArgoCD, staging-first) | **Done** — validated on staging EKS |
+| 6 | Security hardening (Kyverno, Cosign, NetworkPolicy, External Secrets) | **Done** |
+| 7 | Monitoring & SRE (Prometheus, Grafana, Loki, SLOs) | **Done** |
+| 8 | DR & resilience (Velero, k6) | **Done** |
+| 9 | Docs, ADRs, cost | **Done** |
 
-All manifests/config/docs are committed. Live validation (EKS deploy + screenshots)
-is the remaining step — staging is the only counted runtime; production is a Git
-mirror that stays **off**. Full tracker: [STATUS.md](STATUS.md) · Roadmap: [PLAN.md](PLAN.md)
+All phases are complete. The pipeline was validated live on staging EKS — evidence
+is in `images/phase-N/`. The AWS environment has since been decommissioned; staging
+was the only counted runtime, and production remains a Git mirror that stays **off**.
+Full tracker: [STATUS.md](STATUS.md) · Roadmap: [PLAN.md](PLAN.md)
 
 ---
 
@@ -167,18 +170,43 @@ docs/              Full documentation (Phase 9)
 
 ## Documentation
 
+**Start here → [Step-by-Step Guide](docs/step-by-step.md)** — rebuild the whole platform phase by phase, with real evidence at every step.
+
+### Guides & concepts
+
 | Topic | Doc |
 |-------|-----|
-| Architecture & diagrams | [docs/architecture.md](docs/architecture.md), [docs/diagrams/](docs/diagrams/) |
-| Deployment (Minikube + EKS) | [docs/deployment-guide.md](docs/deployment-guide.md), [k8s/README.md](k8s/README.md) |
+| **Build it yourself (with screenshots)** | [docs/step-by-step.md](docs/step-by-step.md) |
+| Architecture & diagrams | [docs/architecture.md](docs/architecture.md) · [docs/diagrams/](docs/diagrams/) |
+| Deployment quick reference (Minikube + EKS) | [docs/deployment-guide.md](docs/deployment-guide.md) · [k8s/README.md](k8s/README.md) |
 | Security hardening | [docs/security.md](docs/security.md) |
-| Monitoring & observability | [docs/monitoring.md](docs/monitoring.md), [monitoring/README.md](monitoring/README.md) |
+| Monitoring & observability | [docs/monitoring.md](docs/monitoring.md) · [monitoring/README.md](monitoring/README.md) |
 | SRE — SLI/SLO/error budget | [docs/sre.md](docs/sre.md) |
-| Disaster recovery | [docs/disaster-recovery.md](docs/disaster-recovery.md) |
-| Resilience testing | [docs/resilience-testing.md](docs/resilience-testing.md) |
 | SonarCloud quality gate | [docs/sonarqube.md](docs/sonarqube.md) |
 | Cost estimates | [docs/cost.md](docs/cost.md) |
 | Architecture Decision Records | [docs/adr/](docs/adr/) |
+
+### Runbooks
+
+| Topic | Doc |
+|-------|-----|
+| Disaster recovery | [docs/disaster-recovery.md](docs/disaster-recovery.md) |
+| Resilience testing | [docs/resilience-testing.md](docs/resilience-testing.md) |
+| Staging-only showcase (re-lift the runtime) | [docs/showcase-staging-only.md](docs/showcase-staging-only.md) |
+| Production promotion (reference — off) | [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
+| EKS staging bootstrap | [k8s/argocd/install-notes.md](k8s/argocd/install-notes.md) |
+| Troubleshooting (Istio, Prisma, Minikube, CD) | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
+
+### Project meta
+
+| Topic | Doc |
+|-------|-----|
+| Phase tracker | [STATUS.md](STATUS.md) |
+| Original roadmap (historical) | [PLAN.md](PLAN.md) |
+| AI agent entry point | [AGENTS.md](AGENTS.md) |
+| Contributing | [CONTRIBUTE.md](CONTRIBUTE.md) |
+| Backend internals | [app/backend/README.md](app/backend/README.md) |
+| Evidence screenshots | [images/](images/) — `phase-N/` per phase |
 
 ---
 

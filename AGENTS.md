@@ -21,7 +21,7 @@ Entry point for AI agents working on this repository. Read this file first, then
 | Dev cluster | Minikube (local) |
 | Staging / Production | EKS on AWS |
 
-**Current phase:** Phases 1–9 built as code/manifests/docs (staging-first; production off). **Next:** live EKS validation + screenshots (`terraform apply`, deploy, capture evidence). See [STATUS.md](STATUS.md).
+**Current phase:** Phases 1–9 complete (staging-first; production off). Live validation was done on staging EKS; the AWS environment has since been **decommissioned** — the screenshots in `images/phase-N/` are the final evidence set and no new captures are possible. See [STATUS.md](STATUS.md).
 
 ---
 
@@ -35,7 +35,7 @@ devsecops-platform/
 ├── k8s/                  # Kustomize manifests (base + overlays + blue-green + argocd)
 ├── .github/workflows/    # ci.yaml, cd.yaml (main)
 ├── scripts/              # blue/green CD automation (Phase 5)
-├── docs/                 # Placeholder — full docs in Phase 9
+├── docs/                 # Architecture, security, SRE, DR guides + ADRs + diagrams
 ├── images/phase-N/       # Screenshot evidence per phase
 ├── docker-compose.yml    # Local dev stack (postgres + redis + backend)
 ├── PLAN.md               # Full roadmap (1056 lines — use STATUS.md for current state)
@@ -114,19 +114,20 @@ Summary:
 
 ---
 
-## Phase Boundaries — what's built vs deferred
+## Phase Boundaries — what's built vs closed
 
-Phases 1–9 are now **implemented as code/manifests/docs**. What remains is
-**manual/live** work, intentionally deferred:
+Phases 1–9 are **complete**. Staging EKS validation happened live (ArgoCD sync,
+blue/green, Kyverno, dashboards, pod recovery) and the environment was then
+decommissioned — do not plan work that requires cluster or AWS access:
 
 | Status | Item |
 |--------|------|
-| Built | Phase 6 security (`k8s/security`, `k8s/kyverno`, `k8s/external-secrets`, securityContext, Cosign in `ci.yaml`) |
-| Built | Phase 7 monitoring (`monitoring/`, SLO rules, dashboards, `docs/sre.md`) |
-| Built | Phase 8 DR/resilience (`k8s/velero`, `tests/k6`, DR + resilience docs) |
-| Built | Phase 9 docs (`docs/` guides, `docs/adr/`, `docs/diagrams/*.mmd`) |
-| Deferred (manual) | Live EKS apply of the above, screenshots, diagram PNG exports, `terraform apply` |
-| Undecided | Production **runtime** (EKS apply, CD promote, ECR push) — **off**; reference [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
+| Done | Phase 6 security (`k8s/security`, `k8s/kyverno`, `k8s/external-secrets`, securityContext, Cosign in `ci.yaml`) — enforced live on staging |
+| Done | Phase 7 monitoring (`monitoring/`, SLO rules, dashboards, `docs/sre.md`) — dashboards validated on EKS |
+| Done | Phase 8 DR/resilience (`k8s/velero`, `tests/k6`, DR + resilience docs) — pod recovery evidenced |
+| Done | Phase 9 docs (`docs/` guides, `docs/adr/`, `docs/diagrams/*.mmd`) |
+| Closed | Runtime evidence — AWS decommissioned; `images/phase-N/` is the final set, no new screenshots |
+| Off | Production **runtime** (EKS apply, CD promote, ECR push) — Git mirror only; reference [docs/cd-production-promotion.md](docs/cd-production-promotion.md) |
 
 > When changing app manifests, keep Kyverno policies and securityContext intact
 > (Phase 6 enforces them on staging/prod).
@@ -165,8 +166,8 @@ Phases 1–9 are now **implemented as code/manifests/docs**. What remains is
 
 1. [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — deploy runbook (Istio, Prisma, Minikube)
 2. [k8s/README.md](k8s/README.md) — quick troubleshooting table
-3. [PLAN.md](PLAN.md) — full phase requirements and acceptance criteria
-4. [images/phase-N/](images/) — expected outcomes as screenshots
+3. [docs/step-by-step.md](docs/step-by-step.md) — full build walkthrough with expected outcomes as screenshots
+4. [PLAN.md](PLAN.md) — full phase requirements and acceptance criteria
 5. [app/backend/README.md](app/backend/README.md) — NestJS structure and request lifecycle
 
 ---

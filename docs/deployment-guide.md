@@ -1,7 +1,9 @@
 # Deployment Guide
 
-Covers local **Minikube** (dev) and cloud **EKS** (staging). Production runtime is
-off during showcase — see [showcase-staging-only.md](showcase-staging-only.md).
+Quick reference for deploying to local **Minikube** (dev) and cloud **EKS**
+(staging). First time here? The narrative walkthrough with screenshots is
+[step-by-step.md](step-by-step.md). Production runtime is off during showcase —
+see [showcase-staging-only.md](showcase-staging-only.md).
 
 ## Prerequisites
 
@@ -36,6 +38,10 @@ kubectl get pods -n dev
 kubectl port-forward svc/backend -n dev 3000:80
 curl http://localhost:3000/health
 ```
+
+Expected result — all pods `2/2` (app + Istio sidecar):
+
+![Pods running in dev namespace](../images/phase-3/07-k8s-pods-dev.png)
 
 Gotchas (Prisma v7, Istio TCP, image caching, LimitRange): [../TROUBLESHOOTING.md](../TROUBLESHOOTING.md).
 
@@ -102,6 +108,10 @@ gh run list --workflow=CD --limit 3
 
 CI builds/scans/signs/pushes to ECR; CD bumps the idle blue/green color, ArgoCD
 syncs, health check runs, traffic switches. Rollback is automatic on failure.
+
+The app answering on EKS after a green pipeline:
+
+![App responding on EKS](../images/phase-3/08-eks-app.png)
 
 ---
 

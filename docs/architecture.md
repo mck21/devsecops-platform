@@ -103,7 +103,7 @@ sequenceDiagram
 
 Prometheus scrapes app `/metrics` + Istio mesh + cluster; Grafana dashboards;
 Loki/Promtail logs; SLOs with multi-window burn-rate alerts. See
-[../docs/sre.md](sre.md) and [../monitoring/README.md](../monitoring/README.md).
+[sre.md](sre.md) and [monitoring/README.md](../monitoring/README.md).
 
 ## Resilience (Phase 8)
 

@@ -1,7 +1,8 @@
 # Diagrams
 
-Source-controlled Mermaid sources. PNG exports are deferred (same as screenshots)
-— render them when preparing the portfolio:
+Source-controlled Mermaid sources. GitHub renders the inline Mermaid in README
+and architecture.md natively; PNG exports are optional (slide decks / PDFs only)
+and need no AWS access — render on demand:
 
 ```bash
 # Mermaid CLI

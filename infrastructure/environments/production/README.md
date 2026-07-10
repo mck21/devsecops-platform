@@ -26,7 +26,7 @@ When [staging](../staging/) modules or variables change, keep this directory ali
 
 ## When to apply
 
-There is no scheduled date. Apply only if we explicitly decide to enable production runtime — see [docs/cd-production-promotion.md](../../docs/cd-production-promotion.md).
+There is no scheduled date. Apply only if we explicitly decide to enable production runtime — see [docs/cd-production-promotion.md](../../../docs/cd-production-promotion.md).
 
 ```bash
 cd infrastructure/environments/production
