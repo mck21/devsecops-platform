@@ -1,34 +1,21 @@
 # Phase 5 — CD & GitOps evidence
 
-**Prerequisite:** Complete [docs/showcase-staging-only.md](../docs/showcase-staging-only.md) (terraform apply staging only, bootstrap EKS, push to `main`, CI + CD green).
+Evidence captured from the live staging EKS pipeline before the AWS environment
+was decommissioned. This set is **final** — no cluster access remains, so no
+further screenshots will be added.
 
-Capture screenshots after the staging CD pipeline runs end-to-end on EKS.
+## Evidence
 
-## Checklist
+| File | Content |
+|------|---------|
+| `01-argocd-sync.png` | ArgoCD UI — `feature-flags-staging` Synced + Healthy on EKS |
+| `03-blue-green-virtualservice.png` | Istio VirtualService showing the blue/green traffic split in staging |
 
-| # | File | Content |
-|---|------|---------|
-| 1 | `01-cd-workflow-green.png` | GitHub Actions CD workflow success with GitOps commits |
-| 2 | `02-argocd-staging-synced.png` | ArgoCD UI — `feature-flags-staging` Synced + Healthy |
-| 3 | `03-blue-green-switch.png` | ArgoCD or terminal during traffic switch |
-| 4 | `04-virtualservice-weights.png` | `kubectl get virtualservice backend -n staging -o yaml` showing 100/0 split |
-| 5 | `05-rollback-complete.png` | Rollback job after simulated health failure (optional) |
-
-## Manual validation commands
-
-```bash
-# After merge to main
-gh run list --workflow=CD --limit 3
-
-# Cluster
-kubectl get pods,virtualservice -n staging
-kubectl get application feature-flags-staging -n argocd
-
-# Health
-curl -f "$STAGING_HEALTH_URL"
-```
+Additional CD evidence lives in Git history itself: the GitOps bump commits on
+`main` (e.g. `chore(staging): pin backend to sha-5137706`) and the green CI/CD
+runs in the repository's Actions tab.
 
 ## Notes
 
-- Dev (Minikube) CD is manual during Phase 5 — no screenshot required for phase closure.
-- Production exists in Git as a staging mirror only — runtime is **off** and not scheduled, so no production screenshots. Reference if ever turned on: [docs/cd-production-promotion.md](../docs/cd-production-promotion.md).
+- Dev (Minikube) CD is manual — no runtime evidence required.
+- Production exists in Git as a staging mirror only — runtime was never lifted, so there is no production evidence. Reference if ever turned on: [docs/cd-production-promotion.md](../../docs/cd-production-promotion.md).

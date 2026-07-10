@@ -49,6 +49,10 @@ a **slow burn** (6×) catches gradual degradation before it silently drains the
 monthly budget. Each alert requires a long **and** a short window to fire, which
 suppresses flapping from brief spikes.
 
+Rules loaded on the live staging Prometheus:
+
+![Prometheus SLO alerts loaded](../images/phase-7/03-prometheus-alerts.png)
+
 ## Dashboards
 
 - **SLO — Error Budget** (`slo-error-budget`): availability vs target, budget

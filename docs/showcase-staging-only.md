@@ -5,9 +5,9 @@ This portfolio project uses a **Git vs runtime** split for production:
 | Layer | Staging | Production |
 |-------|---------|------------|
 | **Git** (manifests, Terraform) | Active source | **Mirror** — kept aligned with staging |
-| **Runtime** (AWS, EKS, CD) | **Lifted** for showcase | **Off** — not lifted; next steps undecided |
+| **Runtime** (AWS, EKS, CD) | Validated live, since **decommissioned** | **Off** — never lifted |
 
-Staging is the only environment with a working pipeline right now. You only need **staging** running for green CI + CD and Phase 5 screenshots.
+Staging was the only environment with a working pipeline; it was validated live on EKS and the AWS runtime has since been decommissioned. This runbook is kept as the procedure to re-lift staging if ever needed — you only need **staging** running for green CI + CD.
 
 ---
 
@@ -105,8 +105,12 @@ Production runtime is off and not scheduled. If we later decide to enable it, se
 
 ---
 
-## Phase 5 screenshots
+## Phase 5 evidence
 
-After CI + CD are green, capture evidence per [images/phase-5/README.md](../images/phase-5/README.md).
+Captured while the staging pipeline ran live — see [images/phase-5/README.md](../images/phase-5/README.md). That evidence set is final; no cluster access remains.
+
+![ArgoCD staging app synced and healthy](../images/phase-5/01-argocd-sync.png)
+
+![VirtualService blue/green weights](../images/phase-5/03-blue-green-virtualservice.png)
 
 Troubleshooting: [TROUBLESHOOTING.md § EKS staging CD](../TROUBLESHOOTING.md#eks-staging-cd-phase-5).

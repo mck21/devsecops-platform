@@ -22,6 +22,10 @@ Defense-in-depth across build, supply chain, admission, runtime, and secrets.
   - writable `/tmp` via emptyDir (compatible with read-only root fs)
   - `automountServiceAccountToken: false`
 
+Verified on the live pod:
+
+![Pod securityContext hardened](../images/phase-6/03-pod-securitycontext.png)
+
 ## Pod Security Standards
 
 Namespace labels (`k8s/namespaces/namespaces.yaml`): **enforce baseline**,
@@ -43,6 +47,10 @@ For a production runtime, prefer managed RDS/ElastiCache and enforce restricted.
 
 Install + demo: [../k8s/kyverno/install-notes.md](../k8s/kyverno/install-notes.md).
 
+Enforcement in action — a violating pod rejected at admission:
+
+![Kyverno policy enforcement](../images/phase-6/01-kyverno-enforced.png)
+
 ## Supply chain — Cosign
 
 CI signs every pushed image **keylessly** via GitHub Actions OIDC
@@ -63,6 +71,8 @@ cosign verify \
 Default-deny ingress per app namespace, plus explicit allows: ingress-nginx →
 backend:3000, monitoring → backend:3000 (scrape), backend → postgres:5432 /
 redis:6379, and DNS + Istiod egress. See `k8s/security/network-policies.yaml`.
+
+![NetworkPolicies and RBAC applied](../images/phase-6/02-networkpolicies-rba.png)
 
 ## RBAC
 

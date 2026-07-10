@@ -481,4 +481,3 @@ When a new deploy issue is discovered:
 1. Document the **symptom**, **cause**, and **fix** in this file
 2. Add a row to the [Quick Symptom Index](#quick-symptom-index)
 3. Update [AGENTS.md](AGENTS.md) if it affects agent phase boundaries
-4. Capture evidence in `images/phase-N/` if relevant
